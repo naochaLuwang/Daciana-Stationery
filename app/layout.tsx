@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     template: "%s | DACIANA",
   },
   description: "Discover curated premium stationery and luxury cosmetics designed for elegance.",
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
