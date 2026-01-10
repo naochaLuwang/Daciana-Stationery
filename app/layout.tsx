@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { CartSync } from "@/components/store/cart-sync";
 import { createClient } from "@/utils/supabase/server";
 import localFont from "next/font/local";
+import NextTopLoader from "nextjs-toploader";
 
 const myBrandFont = localFont({
   src: "../public/fonts/Anders.ttf", // Adjust 'myfont.ttf' to your actual filename
@@ -83,6 +84,11 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${myBrandFont.variable} antialiased`}
       >
+        <NextTopLoader
+          color="#0f172a" // Matches your slate-900
+          showSpinner={false}
+          shadow="0 0 10px #0f172a,0 0 5px #0f172a"
+        />
         <CartSync userId={user?.id || null} />
 
         {children}

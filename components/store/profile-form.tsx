@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, MapPin, Phone, User } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
+import { useRouter } from "next/navigation"
 
 export function ProfileForm({ profile }: { profile: any }) {
     const supabase = createClient()
+    const router = useRouter()
     const [loading, setLoading] = useState(false)
 
     // Consolidate all fields into state for a controlled form
@@ -46,6 +48,10 @@ export function ProfileForm({ profile }: { profile: any }) {
             toast.error("Could not update profile")
         } else {
             toast.success("Profile updated successfully")
+            router.refresh()
+            setTimeout(() => {
+                router.push("/")
+            }, 500)
         }
         setLoading(false)
     }

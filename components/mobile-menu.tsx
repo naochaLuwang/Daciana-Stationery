@@ -153,22 +153,35 @@ export function MobileMenu({ user }: { user: any }) {
                 </div>
 
                 {/* BOTTOM SECTION: User Profile & Sign Out */}
-                <div className="p-4 border-t border-slate-50 bg-slate-50/50 shrink-0 space-y-3">
+                {/* BOTTOM SECTION: User Profile & Actions */}
+                <div className="p-4 border-t border-slate-50 bg-slate-50/50 shrink-0">
                     {user ? (
-                        <>
-                            <SheetClose asChild>
-                                <Link href="/profile" className="flex items-center gap-4 p-2 rounded-xl bg-white border border-slate-100 shadow-sm">
-                                    <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                                        <User className="w-4 h-4 text-slate-600" />
-                                    </div>
-                                    <div className="flex flex-col min-w-0">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Account</span>
-                                        <span className="text-[10px] text-slate-400 truncate w-32">{user.email}</span>
-                                    </div>
-                                </Link>
-                            </SheetClose>
+                        <div className="space-y-3">
+                            {/* Account & Orders Grid */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <SheetClose asChild>
+                                    <Link href="/profile" className="flex flex-col items-center justify-center p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:bg-slate-50 transition-colors">
+                                        <User className="w-5 h-5 text-slate-600 mb-2" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-900">Profile</span>
+                                    </Link>
+                                </SheetClose>
 
-                            {/* NEW SIGN OUT BUTTON */}
+                                <SheetClose asChild>
+                                    <Link href="/profile/orders" className="flex flex-col items-center justify-center p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:bg-slate-50 transition-colors">
+                                        <ShoppingBag className="w-5 h-5 text-slate-600 mb-2" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-900">Orders</span>
+                                    </Link>
+                                </SheetClose>
+                            </div>
+
+                            {/* User Email Display (Subtle) */}
+                            <div className="px-2 py-1">
+                                <p className="text-[10px] text-slate-400 text-center truncate">
+                                    Logged in as <span className="text-slate-600 font-medium">{user.email}</span>
+                                </p>
+                            </div>
+
+                            {/* Sign Out Button */}
                             <button
                                 onClick={handleSignOut}
                                 className="w-full flex items-center justify-center gap-2 py-3.5 px-4 text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-xl transition-colors group"
@@ -176,10 +189,15 @@ export function MobileMenu({ user }: { user: any }) {
                                 <LogOut className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">Sign Out</span>
                             </button>
-                        </>
+                        </div>
                     ) : (
+                        /* LOGIN BUTTON */
                         <SheetClose asChild>
-                            <Link href="/login" className="w-full flex items-center justify-center p-4 bg-slate-900 text-white rounded-full text-[10px] font-bold tracking-[0.2em] uppercase">
+                            <Link
+                                href="/login"
+                                className="w-full flex items-center justify-center gap-3 p-4 bg-slate-900 text-white rounded-xl text-[10px] font-black tracking-[0.2em] uppercase shadow-lg shadow-slate-200 active:scale-[0.98] transition-all"
+                            >
+                                <User className="w-4 h-4" />
                                 Login / Register
                             </Link>
                         </SheetClose>

@@ -32,7 +32,7 @@ export default async function HomePage() {
             <span className="text-xs font-bold tracking-[0.3em] text-pink-500 uppercase mb-4 block">The Beauty Edit</span>
             <h2 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter mb-6">COSMETICS</h2>
             <p className="max-w-md text-gray-700 text-sm mb-8 leading-relaxed">
-              Elevate your daily ritual. Discover our premium skincare and botanical beauty essentials.
+              Elevate your daily ritual. Discover our  skincare and beauty essentials.
             </p>
             <div className="flex gap-4">
               <Button asChild className="bg-gray-900 text-white rounded-lg px-10 py-6 uppercase tracking-widest text-xs font-bold hover:bg-primary transition-all">
@@ -59,7 +59,7 @@ export default async function HomePage() {
             <span className="text-xs font-bold tracking-[0.3em] text-emerald-600 uppercase mb-4 block">The Artisan Collection</span>
             <h2 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter mb-6">STATIONERY</h2>
             <p className="max-w-md text-gray-700 text-sm mb-8 leading-relaxed">
-              The art of the written word. Explore our curated selection of artisan journals.
+              The art of the written word. Explore our curated selection of stationery.
             </p>
             <Button asChild variant="outline" className="border-gray-900/10 rounded-lg px-10 py-6 uppercase tracking-widest text-xs font-bold hover:bg-white/50 transition-all">
               <Link href={`/categories/${stationeryCategory?.id}`}>Shop Collection</Link>

@@ -11,7 +11,12 @@ export default async function CategoriesPage() {
         .select('*')
         .order('name', { ascending: true })
 
-    if (error) return <div className="py-20 text-center font-daciana tracking-widest">Loading...</div>
+    if (error) return (
+        <div className="py-32 text-center">
+            <p className="font-daciana tracking-widest text-red-400">Unable to load collections.</p>
+            <button onClick={() => window.location.reload()} className="mt-4 text-[10px] font-bold uppercase tracking-[0.2em] underline">Try Again</button>
+        </div>
+    )
 
     return (
         <main className="min-h-screen bg-[#fafafa]">
