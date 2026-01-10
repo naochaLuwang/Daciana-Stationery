@@ -3,6 +3,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  /* This maps 'font-daciana' to the variable we created in layout.tsx */
+  --font-daciana: var(--font-daciana);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

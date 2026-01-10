@@ -36,20 +36,20 @@ export function Footer() {
 
                     {/* Brand Section */}
                     <div className="space-y-6">
-                        <Link href="/" className="flex items-center gap-2">
-                            {/* Replace with your actual logo <Image src="/logo.png" width={40} height={40} alt="Logo" /> */}
-                            <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white font-black text-xl italic">
-                                S
-                            </div>
-                            <span className="text-xl font-black tracking-tighter uppercase">YourStore</span>
+                        <Link href="/" className="flex flex-col items-start justify-center group min-w-fit">
+                            <span className="text-xl md:text-2xl font-black font-daciana tracking-[0.15em] leading-none text-slate-900 group-hover:text-primary transition-colors">
+                                DACIANA
+                            </span>
+                            <span className="text-[7px] md:text-[8px] font-bold tracking-[0.3em] text-slate-400 uppercase whitespace-nowrap mt-1">
+                                Stationery & Cosmetics
+                            </span>
                         </Link>
                         <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
                             Premium essentials designed for the modern lifestyle. Quality materials, ethical production, and fast delivery.
                         </p>
                         <div className="flex gap-4">
-                            <Link href="#" className="p-2 bg-slate-50 rounded-full hover:bg-black hover:text-white transition-all"><Instagram className="w-4 h-4" /></Link>
-                            <Link href="#" className="p-2 bg-slate-50 rounded-full hover:bg-black hover:text-white transition-all"><Twitter className="w-4 h-4" /></Link>
-                            <Link href="#" className="p-2 bg-slate-50 rounded-full hover:bg-black hover:text-white transition-all"><Facebook className="w-4 h-4" /></Link>
+                            <Link href="https://www.instagram.com/daciana_stationery_cosmetic" className="p-2 bg-slate-50 rounded-full hover:bg-black hover:text-white transition-all"><Instagram className="w-4 h-4" /></Link>
+                            <Link href="https://www.facebook.com/share/1C4irouDXt/" className="p-2 bg-slate-50 rounded-full hover:bg-black hover:text-white transition-all"><Facebook className="w-4 h-4" /></Link>
                         </div>
                     </div>
 
@@ -81,16 +81,16 @@ export function Footer() {
                             <div className="flex gap-3">
                                 <MapPin className="w-5 h-5 text-slate-400 shrink-0" />
                                 <span className="text-slate-600 leading-tight">
-                                    123 Fashion Street, Cyber Hub,<br /> Gurgaon, Haryana - 122002
+                                    Kontha Khabam, Lai Haraopham <br /> Po. Mantripukhri, Imphal- 795002
                                 </span>
                             </div>
                             <div className="flex gap-3">
                                 <Phone className="w-5 h-5 text-slate-400 shrink-0" />
-                                <span className="text-slate-600 font-bold">+91 98765 43210</span>
+                                <span className="text-slate-600 font-bold">+91 6909013764</span>
                             </div>
                             <div className="flex gap-3">
                                 <Mail className="w-5 h-5 text-slate-400 shrink-0" />
-                                <span className="text-slate-600">hello@yourstore.com</span>
+                                <span className="text-slate-600">dacianaenterprises@gmail.com</span>
                             </div>
                         </div>
                     </div>
@@ -99,7 +99,7 @@ export function Footer() {
                 {/* Bottom Bar */}
                 <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
                     <p className="text-slate-400 text-xs font-medium uppercase tracking-tight">
-                        © 2026 YourStore Private Limited. All Rights Reserved.
+                        © 2026 Daciana STATIONERY & COSMETICS. All Rights Reserved.
                     </p>
 
                     <div className="flex items-center gap-6">

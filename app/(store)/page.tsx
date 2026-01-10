@@ -15,6 +15,7 @@ export default async function HomePage() {
 
   // Helper function to find the right ID based on the name
   const cosmeticCategory = categories?.find(c => c.name.toLowerCase() === 'cosmetics');
+  const stationeryCategory = categories?.find(c => c.name.toLowerCase() === 'stationery');
   return (
     <div className="bg-background-light dark:bg-background-dark font-display antialiased">
 
@@ -61,7 +62,7 @@ export default async function HomePage() {
               The art of the written word. Explore our curated selection of artisan journals.
             </p>
             <Button asChild variant="outline" className="border-gray-900/10 rounded-lg px-10 py-6 uppercase tracking-widest text-xs font-bold hover:bg-white/50 transition-all">
-              <Link href="/shop?category=stationery">Shop Collection</Link>
+              <Link href={`/categories/${stationeryCategory?.id}`}>Shop Collection</Link>
             </Button>
 
             {/* HOVER GRID OVERLAY (Stationery) */}

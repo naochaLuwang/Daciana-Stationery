@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { UserPlus, LogIn, Mail, Lock, User } from "lucide-react"
+import { UserPlus, LogIn, Mail, Lock, User, Phone } from "lucide-react"
 
 export default function AuthPage() {
     const [loading, setLoading] = useState(false)
@@ -23,15 +23,26 @@ export default function AuthPage() {
         const email = formData.get('email') as string
         const password = formData.get('password') as string
         const fullName = formData.get('fullName') as string
+        const phone = formData.get('phone') as string
 
         if (type === 'signup') {
-            const { error } = await supabase.auth.signUp({
+            const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
-                options: { data: { full_name: fullName } }
+                options: { data: { full_name: fullName, phone: phone } }
             })
-            if (error) toast.error(error.message)
-            else toast.success("Signup successful! Check your email.")
+
+            if (error) {
+                toast.error(error.message)
+            } else if (data.session) {
+                // If "Confirm Email" is OFF, session will exist here
+                toast.success("Account created! Welcome.")
+                router.push("/profile")
+                router.refresh()
+            } else {
+                // If "Confirm Email" is ON, session will be null
+                toast.success("Signup successful! Please verify your email to log in.")
+            }
         } else {
             const { error } = await supabase.auth.signInWithPassword({ email, password })
             if (error) toast.error(error.message)
@@ -53,11 +64,11 @@ export default function AuthPage() {
                             <TabsTrigger value="login">Login</TabsTrigger>
                             <TabsTrigger value="signup">Sign Up</TabsTrigger>
                         </TabsList>
-                        <CardTitle className="text-2xl font-bold tracking-tight">
-                            Dariciana Stationery
+                        <CardTitle className="text-2xl font-daciana font-bold tracking-tight">
+                            DACIANA
                         </CardTitle>
                         <CardDescription>
-                            Enter your details to continue
+                            STATIONERY & COSMETICS
                         </CardDescription>
                     </CardHeader>
 
@@ -86,6 +97,16 @@ export default function AuthPage() {
                                     <div className="relative">
                                         <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                                         <Input name="fullName" placeholder="Full Name" className="pl-10" required />
+                                    </div>
+                                    <div className="relative">
+                                        <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                        <Input
+                                            name="phone"
+                                            type="tel"
+                                            placeholder="Phone Number (e.g. +91...)"
+                                            className="pl-10"
+                                            required
+                                        />
                                     </div>
                                     <div className="relative">
                                         <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
