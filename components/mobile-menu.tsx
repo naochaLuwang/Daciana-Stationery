@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Menu, ChevronRight, ShoppingBag, Home, Grid, User, Download, Share, PlusSquare } from "lucide-react"
+import { useRouter } from "next/navigation" // Added for redirection
+import { createClient } from "@/utils/supabase/client" // Ensure you have a client-side supabase util
+import { Menu, ChevronRight, ShoppingBag, Home, Grid, User, Download, Share, PlusSquare, LogOut } from "lucide-react"
 import {
     Sheet,
     SheetContent,
@@ -13,6 +15,7 @@ import {
 } from "@/components/ui/sheet"
 
 export function MobileMenu({ user }: { user: any }) {
+    const router = useRouter()
     const [open, setOpen] = useState(false)
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
     const [isInstallable, setIsInstallable] = useState(false)
@@ -20,14 +23,10 @@ export function MobileMenu({ user }: { user: any }) {
     const [isStandalone, setIsStandalone] = useState(false)
 
     useEffect(() => {
-        // Detect iOS
         const ua = window.navigator.userAgent
         setIsIOS(!!ua.match(/iPad/i) || !!ua.match(/iPhone/i))
-
-        // Detect if already installed
         setIsStandalone(window.matchMedia('(display-mode: standalone)').matches)
 
-        // Listen for Chrome/Android install prompt
         const handler = (e: any) => {
             e.preventDefault()
             setDeferredPrompt(e)
@@ -36,6 +35,14 @@ export function MobileMenu({ user }: { user: any }) {
         window.addEventListener("beforeinstallprompt", handler)
         return () => window.removeEventListener("beforeinstallprompt", handler)
     }, [])
+
+    const handleSignOut = async () => {
+        const supabase = createClient()
+        await supabase.auth.signOut()
+        setOpen(false) // Close menu
+        router.refresh() // Refresh to update user state across the app
+        router.push('/') // Redirect to home
+    }
 
     const handleInstallClick = async () => {
         if (!deferredPrompt) return
@@ -92,7 +99,6 @@ export function MobileMenu({ user }: { user: any }) {
                     </nav>
 
                     {/* PWA Section */}
-                    {/* PWA Section */}
                     {!isStandalone && (
                         <div className="mx-4 mb-6 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
                             <div className="p-5">
@@ -105,14 +111,12 @@ export function MobileMenu({ user }: { user: any }) {
                                             Enjoy a faster, seamless shopping experience.
                                         </p>
                                     </div>
-                                    {/* Visual Icon Badge */}
                                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm border border-slate-100">
                                         <ShoppingBag className="w-5 h-5 text-primary/80" />
                                     </div>
                                 </div>
 
                                 {isIOS ? (
-                                    /* iOS Instructions - Redesigned with custom icons */
                                     <div className="space-y-3 bg-white/50 p-3 rounded-xl border border-white/80">
                                         <div className="flex items-center gap-3">
                                             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white border border-slate-100 shadow-sm">
@@ -128,7 +132,6 @@ export function MobileMenu({ user }: { user: any }) {
                                         </div>
                                     </div>
                                 ) : (
-                                    /* Android/Chrome Install Button - Sleek & Modern */
                                     isInstallable && (
                                         <button
                                             onClick={handleInstallClick}
@@ -140,7 +143,6 @@ export function MobileMenu({ user }: { user: any }) {
                                                     Install App
                                                 </span>
                                             </div>
-                                            {/* Subtle Shine Effect */}
                                             <div className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                         </button>
                                     )
@@ -150,17 +152,31 @@ export function MobileMenu({ user }: { user: any }) {
                     )}
                 </div>
 
-                <div className="p-6 border-t border-slate-50 bg-slate-50/50 shrink-0">
+                {/* BOTTOM SECTION: User Profile & Sign Out */}
+                <div className="p-4 border-t border-slate-50 bg-slate-50/50 shrink-0 space-y-3">
                     {user ? (
-                        <SheetClose asChild>
-                            <Link href="/profile" className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center"><User className="w-4 h-4 text-slate-600" /></div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-900">Account</span>
-                                    <span className="text-[10px] text-slate-400 truncate w-32">{user.email}</span>
-                                </div>
-                            </Link>
-                        </SheetClose>
+                        <>
+                            <SheetClose asChild>
+                                <Link href="/profile" className="flex items-center gap-4 p-2 rounded-xl bg-white border border-slate-100 shadow-sm">
+                                    <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                                        <User className="w-4 h-4 text-slate-600" />
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Account</span>
+                                        <span className="text-[10px] text-slate-400 truncate w-32">{user.email}</span>
+                                    </div>
+                                </Link>
+                            </SheetClose>
+
+                            {/* NEW SIGN OUT BUTTON */}
+                            <button
+                                onClick={handleSignOut}
+                                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-xl transition-colors group"
+                            >
+                                <LogOut className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Sign Out</span>
+                            </button>
+                        </>
                     ) : (
                         <SheetClose asChild>
                             <Link href="/login" className="w-full flex items-center justify-center p-4 bg-slate-900 text-white rounded-full text-[10px] font-bold tracking-[0.2em] uppercase">
