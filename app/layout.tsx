@@ -40,6 +40,9 @@ export const metadata: Metadata = {
   },
   description: "Discover curated premium stationery and luxury cosmetics designed for elegance.",
   manifest: "/manifest.webmanifest",
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
