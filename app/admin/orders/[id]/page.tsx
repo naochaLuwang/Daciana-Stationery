@@ -16,7 +16,7 @@ export default function OrderDetailsPage() {
     const [loading, setLoading] = useState(true)
 
     // Construct your tracking URL (replace with your actual domain)
-    const trackingUrl = `https://dacianastore.in/track/${order?.id}`
+    const trackingUrl = `https://dacianastore.in/track/${id}`
 
     useEffect(() => {
         async function fetchOrder() {
