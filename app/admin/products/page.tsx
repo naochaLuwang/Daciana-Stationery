@@ -16,18 +16,20 @@ export default async function ProductsPage({
     const { query, category } = await searchParams
     const supabase = await createClient()
 
-    // 1. Fetch Categories for the dropdown
+    // 1. Fetch Categories for the dropdown filter
     const { data: categoriesList } = await supabase
         .from("categories")
         .select("id, name")
         .order("name")
 
-    // 2. Build Query
+    // 2. Build Query with !inner hint
+    // The !inner hint tells Supabase to filter the top-level rows (products) 
+    // based on the conditions applied to the joined table (product_categories).
     let dbQuery = supabase
         .from("products")
         .select(`
             *,
-            product_categories (
+            product_categories!inner (
                 category_id,
                 categories (name)
             ),
@@ -35,17 +37,19 @@ export default async function ProductsPage({
         `)
         .order("created_at", { ascending: false })
 
+    // Apply Search Query
     if (query) {
         dbQuery = dbQuery.or(`name.ilike.%${query}%, brand.ilike.%${query}%`)
     }
 
+    // Apply Category Filter correctly using the inner joined relationship
     if (category && category !== "all") {
-        dbQuery = dbQuery.filter("product_categories.category_id", "eq", category)
+        dbQuery = dbQuery.eq("product_categories.category_id", category)
     }
 
-    const { data: products } = await dbQuery
+    const { data: products, error } = await dbQuery
 
-    // 3. Status Toggle Action
+    // 3. Server Action for Status Toggle
     async function toggleStatus(id: string, currentStatus: string) {
         "use server"
         const supabase = await createClient()
@@ -62,21 +66,20 @@ export default async function ProductsPage({
     return (
         <div className="flex-col">
             <div className="flex-1 space-y-4 p-8 pt-6">
-
-                {/* Header */}
+                {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
                     <div>
-                        <h2 className="text-3xl font-bold tracking-tight">Products</h2>
+                        <h2 className="text-3xl font-black tracking-tighter uppercase">Products</h2>
                         <p className="text-sm text-muted-foreground">Manage your catalog visibility and inventory.</p>
                     </div>
-                    <Button asChild>
+                    <Button asChild className="rounded-full px-6">
                         <Link href="/admin/products/add">
                             <Plus className="mr-2 h-4 w-4" /> Add Product
                         </Link>
                     </Button>
                 </div>
 
-                {/* Filters */}
+                {/* Filters Section */}
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="w-full md:w-80">
                         <ProductSearch />
@@ -86,111 +89,95 @@ export default async function ProductsPage({
                     </div>
                 </div>
 
-                {/* Table */}
-                <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+                {/* Data Table */}
+                <div className="rounded-[2rem] border bg-white shadow-sm overflow-hidden">
                     <table className="w-full text-sm">
                         <thead className="bg-slate-50 border-b">
-                            <tr className="text-left font-semibold text-slate-600">
-                                <th className="p-4">Product</th>
-                                <th className="p-4">Brand</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4">Type/Variants</th>
-                                <th className="p-4">Total Stock</th>
-                                <th className="p-4 text-right">Actions</th>
+                            <tr className="text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest">
+                                <th className="p-5">Product Info</th>
+                                <th className="p-5">Brand</th>
+                                <th className="p-5">Status</th>
+                                <th className="p-5">Inventory</th>
+                                <th className="p-5 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y">
-                            {products?.map((product) => {
-                                const totalStock = product.product_variants?.reduce(
-                                    (acc: number, curr: any) => acc + (curr.stock || 0), 0
-                                ) || 0
+                        <tbody className="divide-y divide-slate-100">
+                            {products && products.length > 0 ? (
+                                products.map((product) => {
+                                    const totalStock = product.product_variants?.reduce(
+                                        (acc: number, curr: any) => acc + (curr.stock || 0), 0
+                                    ) || 0
+                                    const variantCount = product.product_variants?.length || 0
+                                    const isActive = product.status === "active"
 
-                                const variantCount = product.product_variants?.length || 0
-                                const isActive = product.status === "active"
-
-                                return (
-                                    <tr
-                                        key={product.id}
-                                        className={`hover:bg-slate-50/50 transition-colors ${!isActive ? 'bg-slate-50/30 opacity-75' : ''}`}
-                                    >
-                                        {/* Product Info */}
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`h-10 w-10 relative rounded-md border bg-slate-50 overflow-hidden ${!isActive ? 'grayscale' : ''}`}>
-                                                    {product.thumbnail_url ? (
-                                                        <Image fill src={product.thumbnail_url} alt="" className="object-cover" unoptimized />
-                                                    ) : (
-                                                        <Package className="h-5 w-5 m-auto mt-2 text-slate-300" />
-                                                    )}
+                                    return (
+                                        <tr key={product.id} className={`group hover:bg-slate-50 transition-colors ${!isActive ? 'opacity-60' : ''}`}>
+                                            <td className="p-5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-12 w-12 relative rounded-xl border bg-slate-100 overflow-hidden flex-shrink-0">
+                                                        {product.thumbnail_url ? (
+                                                            <Image fill src={product.thumbnail_url} alt={product.name} className="object-cover" />
+                                                        ) : (
+                                                            <Package className="h-5 w-5 m-auto absolute inset-0 text-slate-300" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-slate-900 leading-none mb-1 text-base">
+                                                            {product.name}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-400 font-mono tracking-tighter">
+                                                            {product.slug}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col">
-                                                    <span className={`font-bold ${isActive ? 'text-slate-800' : 'text-slate-500'}`}>
-                                                        {product.name}
-                                                    </span>
-                                                    <span className="text-[10px] text-muted-foreground font-mono">{product.slug}</span>
+                                            </td>
+
+                                            <td className="p-5">
+                                                <span className="text-slate-500 font-medium uppercase text-xs tracking-tight">
+                                                    {product.brand || "Generic"}
+                                                </span>
+                                            </td>
+
+                                            <td className="p-5">
+                                                <Badge variant={isActive ? "default" : "secondary"} className={`rounded-full px-3 py-0.5 text-[10px] font-bold uppercase tracking-tighter ${isActive ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}>
+                                                    {product.status}
+                                                </Badge>
+                                            </td>
+
+                                            <td className="p-5">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold text-slate-900">{totalStock} units</span>
+                                                        <div className={`h-1.5 w-1.5 rounded-full ${totalStock > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase">
+                                                        {variantCount} Variants
+                                                    </p>
                                                 </div>
-                                            </div>
-                                        </td>
+                                            </td>
 
-                                        {/* Brand Name Column */}
-                                        <td className="p-4">
-                                            <span className="text-slate-600 font-medium italic">
-                                                {product.brand || "—"}
-                                            </span>
-                                        </td>
-
-                                        {/* Status Column */}
-                                        <td className="p-4">
-                                            <Badge
-                                                variant={isActive ? "default" : "secondary"}
-                                                className={isActive ? "bg-emerald-500 hover:bg-emerald-600 border-none" : "text-slate-400"}
-                                            >
-                                                {product.status}
-                                            </Badge>
-                                        </td>
-
-                                        {/* Variant Count Column */}
-                                        <td className="p-4">
-                                            {product.has_variants ? (
-                                                <div className="flex items-center gap-1.5 font-bold text-indigo-600">
-                                                    <Layers className="h-4 w-4" />
-                                                    <span>{variantCount} Shades</span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-muted-foreground text-xs italic">Standard</span>
-                                            )}
-                                        </td>
-
-                                        {/* Stock Column */}
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className={`h-2 w-2 rounded-full ${totalStock > 10 ? 'bg-green-500' : 'bg-red-500'}`} />
-                                                <span className="font-mono font-medium">{totalStock} units</span>
-                                            </div>
-                                        </td>
-
-                                        {/* Actions */}
-                                        <td className="p-4 text-right">
-                                            <div className="flex justify-end items-center gap-2">
-                                                {/* Status Toggle Button */}
-                                                <form action={toggleStatus.bind(null, product.id, product.status)}>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className={`h-8 w-8 ${isActive ? 'text-slate-400' : 'text-emerald-600 border-emerald-100 bg-emerald-50'}`}
-                                                    >
-                                                        {isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            <td className="p-5 text-right">
+                                                <div className="flex justify-end items-center gap-2">
+                                                    <form action={toggleStatus.bind(null, product.id, product.status)}>
+                                                        <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl border-slate-200">
+                                                            {isActive ? <EyeOff className="h-4 w-4 text-slate-400" /> : <Eye className="h-4 w-4 text-emerald-500" />}
+                                                        </Button>
+                                                    </form>
+                                                    <Button variant="secondary" size="sm" asChild className="h-9 px-4 rounded-xl font-bold uppercase text-[10px] tracking-widest">
+                                                        <Link href={`/admin/products/edit/${product.id}`}>Edit</Link>
                                                     </Button>
-                                                </form>
-
-                                                <Button variant="ghost" size="sm" asChild className="h-8">
-                                                    <Link href={`/admin/products/edit/${product.id}`}>Edit</Link>
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )
-                            })}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan={5} className="p-20 text-center text-slate-400 italic">
+                                        No products found matching your selection.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

@@ -1,18 +1,21 @@
+
+
+
 'use server'
 
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
 
+/**
+ * PLACE ORDER
+ */
 export async function placeOrder(formData: any, cartItems: any[], shippingDetails: any) {
     const supabase = await createClient()
-
-    // 1. Get the current logged-in user
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error("User not authenticated")
 
     try {
-        // 2. CHECK STOCK AVAILABILITY FIRST
-        // We do this before creating the order to avoid empty orders if stock is gone
+        // 1. Check stock availability
         for (const item of cartItems) {
             const { data: variant, error: stockErr } = await supabase
                 .from("product_variants")
@@ -26,13 +29,13 @@ export async function placeOrder(formData: any, cartItems: any[], shippingDetail
             }
         }
 
-        // 3. Insert the main Order
+        // 2. Insert the main Order
         const { data: order, error: orderError } = await supabase
             .from('orders')
             .insert([{
                 user_id: user.id,
                 status: 'pending',
-                payment_status: 'unpaid', // Default for COD
+                payment_status: 'unpaid',
                 payment_method: 'COD',
                 total: shippingDetails.total,
                 shipping_price: shippingDetails.price,
@@ -44,7 +47,7 @@ export async function placeOrder(formData: any, cartItems: any[], shippingDetail
 
         if (orderError) throw orderError
 
-        // 4. Insert all items into Order Items
+        // 3. Insert Order Items
         const itemsToInsert = cartItems.map(item => ({
             order_id: order.id,
             product_id: item.id,
@@ -61,28 +64,15 @@ export async function placeOrder(formData: any, cartItems: any[], shippingDetail
 
         if (itemsError) throw itemsError
 
-        // 5. DECREASE STOCK FOR EACH ITEM
+        // 4. Decrease Stock
         for (const item of cartItems) {
-            // We use a postgrest filter to ensure stock doesn't go below 0 
-            // even if another process updated it in the last millisecond
-            const { error: updateError } = await supabase
-                .rpc('decrement_stock', {
-                    row_id: item.variantId,
-                    amount: item.quantity
-                })
-
-            // If you haven't created the RPC function yet, use this standard update:
-            if (updateError) {
-                const { error: manualError } = await supabase
-                    .from("product_variants")
-                    .update({
-                        stock: supabase.rpc('decrement', { x: item.quantity }) // Logic shortcut
-                    })
-                    .eq("id", item.variantId)
-            }
+            await supabase.rpc('decrement_stock', {
+                row_id: item.variantId,
+                amount: item.quantity
+            })
         }
 
-        // 6. Refresh Admin and Profile Pages
+        revalidatePath("/admin/orders")
         revalidatePath("/admin/products")
         revalidatePath("/profile")
 
@@ -91,5 +81,85 @@ export async function placeOrder(formData: any, cartItems: any[], shippingDetail
     } catch (error: any) {
         console.error("ORDER_PLACEMENT_ERROR:", error)
         return { success: false, message: error.message }
+    }
+}
+
+export async function cancelOrderAndRestoreStock(orderId: string) {
+    const supabase = await createClient()
+
+    try {
+        // 1. Get current user for security check
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error("Authentication required")
+
+        // 2. Fetch order, items, and user_id
+        const { data: order, error: orderFetchErr } = await supabase
+            .from('orders')
+            .select('status, user_id, order_items(product_variant_id, quantity)')
+            .eq('id', orderId)
+            .single()
+
+        if (orderFetchErr || !order) throw new Error("Order not found")
+
+        // 3. SECURITY: Verify ownership
+        // Only allow the person who placed the order or an admin to cancel it
+        // If you have a specific way to identify admins, add that logic here
+        if (order.user_id !== user.id) {
+            throw new Error("Unauthorized: You do not have permission to cancel this order")
+        }
+
+        // 4. STATUS CHECK: Prevent cancelling shipped/delivered items
+        const protectedStatuses = ['shipped', 'delivered']
+        if (protectedStatuses.includes(order.status.toLowerCase())) {
+            throw new Error(`Cannot cancel order once it has been ${order.status}.`)
+        }
+
+        if (order.status === 'cancelled') {
+            throw new Error("Order is already cancelled")
+        }
+
+        // 5. UPDATE: Set status to cancelled
+        const { error: updateErr } = await supabase
+            .from('orders')
+            .update({ status: 'cancelled' })
+            .eq('id', orderId)
+
+        if (updateErr) throw updateErr
+
+        // 6. RESTORE STOCK: Loop through items and increment inventory
+        const items = order.order_items
+        for (const item of items) {
+            const { error: rpcErr } = await supabase.rpc('increment_stock', {
+                row_id: item.product_variant_id,
+                amount: item.quantity
+            })
+
+            // Fallback if the RPC function isn't found in your Supabase DB
+            if (rpcErr) {
+                const { data: v } = await supabase
+                    .from('product_variants')
+                    .select('stock')
+                    .eq('id', item.product_variant_id)
+                    .single()
+
+                if (v) {
+                    await supabase
+                        .from("product_variants")
+                        .update({ stock: v.stock + item.quantity })
+                        .eq("id", item.product_variant_id)
+                }
+            }
+        }
+
+        // 7. CACHE CLEARING: Refresh all relevant routes
+        revalidatePath("/admin/orders")
+        revalidatePath("/admin/products")
+        revalidatePath("/profile")
+        revalidatePath(`/profile/orders/${orderId}`) // Refresh the specific details page
+
+        return { success: true }
+    } catch (error: any) {
+        console.error("CANCEL_ORDER_ERROR:", error)
+        return { success: false, message: error.message || "Failed to cancel order" }
     }
 }

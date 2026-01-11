@@ -1,5 +1,8 @@
 "use client"
 
+// Find your imports at the top and update this line:
+import { cancelOrderAndRestoreStock } from "@/app/actions/orders"
+
 import { useState, useEffect, useMemo } from "react"
 import { createClient } from "@/utils/supabase/client"
 import {
@@ -70,7 +73,39 @@ export default function AdminOrdersPage() {
         return matchesTab && matchesSearch
     })
 
+    // Inside AdminOrdersPage component
     async function updateStatus(orderId: string, field: 'status' | 'payment_status', val: string) {
+        // Find the current order in our local state to check its status
+        const currentOrder = orders.find(o => o.id === orderId)
+
+        if (field === 'status' && val === 'cancelled') {
+            // PREVENT CANCELLATION IF SHIPPED
+            if (currentOrder?.status === 'shipped' || currentOrder?.status === 'delivered') {
+                toast.error(`Operation Denied: Order is already ${currentOrder.status}`)
+                // We force the table to re-fetch to reset the select dropdown UI
+                fetchOrders()
+                return
+            }
+
+            const confirmCancel = confirm("Cancel order and restock items?")
+            if (!confirmCancel) {
+                fetchOrders()
+                return
+            }
+
+            setLoading(true)
+            const res = await cancelOrderAndRestoreStock(orderId)
+            if (res.success) {
+                toast.success("Order cancelled and stock restored")
+            } else {
+                toast.error(res.message)
+            }
+            setLoading(false)
+            fetchOrders()
+            return
+        }
+
+        // Normal update for other statuses
         const { error } = await supabase.from('orders').update({ [field]: val }).eq('id', orderId)
         if (error) toast.error("Update failed")
         else {
@@ -198,7 +233,12 @@ export default function AdminOrdersPage() {
                                                 <SelectItem value="processing">Processing</SelectItem>
                                                 <SelectItem value="shipped">Shipped</SelectItem>
                                                 <SelectItem value="delivered">Delivered</SelectItem>
-                                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                                                <SelectItem
+                                                    value="cancelled"
+                                                    disabled={order.status === 'shipped' || order.status === 'delivered'}
+                                                >
+                                                    Cancelled
+                                                </SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </TableCell>

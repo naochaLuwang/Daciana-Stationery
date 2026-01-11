@@ -31,6 +31,7 @@ export default async function AdminDashboard({
         .from("orders")
         .select(`
             *,
+            order_items(*),
             profiles (
                 full_name
             )

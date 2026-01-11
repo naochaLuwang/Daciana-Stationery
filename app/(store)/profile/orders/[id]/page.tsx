@@ -2,9 +2,9 @@ import { createClient } from "@/utils/supabase/server"
 import { notFound } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Package, Home, Phone, Calendar, CreditCard, ShieldCheck, Clock, AlertCircle } from "lucide-react"
+import { Package, Home, Phone, Calendar, CreditCard, ShieldCheck, Clock, AlertCircle, XCircle } from "lucide-react"
+import { CancelOrderButton } from "@/components/orders/cancel-order-button"
 
-// 1. Define the type for the async params
 type tParams = Promise<{ id: string }>;
 
 export default async function OrderDetailsPage(props: { params: tParams }) {
@@ -24,7 +24,6 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
 
     const address = order.shipping_address as any
 
-    // Helper for Payment Status UI
     const getPaymentStatusStyles = (status: string) => {
         switch (status?.toLowerCase()) {
             case 'paid':
@@ -39,7 +38,7 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
                     icon: <AlertCircle className="w-3 h-3" />,
                     label: 'Refunded'
                 }
-            default: // unpaid
+            default:
                 return {
                     bg: 'bg-slate-100 text-slate-600 border-slate-200',
                     icon: <Clock className="w-3 h-3" />,
@@ -66,18 +65,34 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
                         Placed on {new Date(order.created_at).toLocaleDateString('en-IN', { dateStyle: 'long' })}
                     </p>
                 </div>
-                <div className="flex flex-col items-start md:items-end gap-2">
-                    <Badge className={`text-sm px-4 py-1 rounded-full uppercase font-bold shadow-none ${order.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                        }`}>
-                        {order.status}
-                    </Badge>
-                    <span className="text-[10px] text-slate-400 font-mono">ID: {id}</span>
+
+                <div className="flex flex-col items-start md:items-end gap-3">
+                    <div className="flex items-center gap-3">
+                        {/* THE CANCEL BUTTON: Logic inside the component handles the "Shipped" check */}
+                        <CancelOrderButton orderId={id} currentStatus={order.status} />
+
+                        <Badge className={`text-sm px-4 py-1 rounded-full uppercase font-bold shadow-none ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                            order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                'bg-blue-100 text-blue-700'
+                            }`}>
+                            {order.status}
+                        </Badge>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono uppercase tracking-tighter">Order ID: {id}</span>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* LEFT COLUMN: ORDERED ITEMS */}
                 <div className="lg:col-span-2 space-y-6">
+                    {/* CANCELLED NOTICE */}
+                    {order.status === 'cancelled' && (
+                        <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center gap-3 text-red-800">
+                            <XCircle className="w-5 h-5 flex-shrink-0" />
+                            <p className="text-sm font-bold uppercase tracking-tight">This order has been cancelled.</p>
+                        </div>
+                    )}
+
                     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                         <div className="p-4 border-b bg-slate-50/50">
                             <h2 className="font-bold text-slate-700 flex items-center gap-2 text-sm uppercase tracking-wider">
@@ -106,7 +121,6 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
 
                 {/* RIGHT COLUMN: ADDRESS & TOTALS */}
                 <div className="space-y-6">
-                    {/* SHIPPING ADDRESS CARD */}
                     <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                         <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
                             <Home className="w-4 h-4 text-blue-600" /> Delivery To
@@ -121,7 +135,6 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
                         </div>
                     </div>
 
-                    {/* PAYMENT SUMMARY CARD */}
                     <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-xl shadow-slate-200">
                         <h3 className="font-bold mb-6 flex items-center gap-2 text-sm uppercase tracking-wider text-slate-400">
                             <CreditCard className="w-4 h-4" /> Order Summary
@@ -145,7 +158,6 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
                             </div>
                         </div>
 
-                        {/* PAYMENT STATUS FOOTER */}
                         <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center">
                             <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${order.payment_status === 'paid' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 bg-white/5'
                                 }`}>

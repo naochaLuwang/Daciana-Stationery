@@ -20,7 +20,8 @@ export const adminConfig = {
         { title: "Customers", href: "/admin/customers", icon: Users }, // Added to match e-commerce flow
         { title: "Shipping", href: "/admin/shipping", icon: Truck }, // Changed to Truck icon
         { title: "Messages", href: "/admin/messages", icon: Mail },
-        { titele: "Reviews", href: "/admin/reviews", icon: Star }, // Added Messages section
+        { title: "Reviews", href: "/admin/reviews", icon: Star },
+        // Added Messages section
         { title: "Legal Settings", href: "/admin/settings/legal", icon: Settings },
     ],
 }
