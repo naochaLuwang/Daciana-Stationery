@@ -2,18 +2,15 @@ import { createClient } from "@/utils/supabase/server"
 import { notFound } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Package, Home, Phone, Calendar, CreditCard } from "lucide-react"
+import { Package, Home, Phone, Calendar, CreditCard, ShieldCheck, Clock, AlertCircle } from "lucide-react"
 
 // 1. Define the type for the async params
 type tParams = Promise<{ id: string }>;
 
 export default async function OrderDetailsPage(props: { params: tParams }) {
-    // 2. UNWRAP the params using await
     const { id } = await props.params;
-
     const supabase = await createClient()
 
-    // 3. Fetch order details with joined items
     const { data: order, error } = await supabase
         .from("orders")
         .select(`
@@ -25,22 +22,52 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
 
     if (error || !order) return notFound()
 
-    // Parse the shipping address JSON
     const address = order.shipping_address as any
+
+    // Helper for Payment Status UI
+    const getPaymentStatusStyles = (status: string) => {
+        switch (status?.toLowerCase()) {
+            case 'paid':
+                return {
+                    bg: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                    icon: <ShieldCheck className="w-3 h-3" />,
+                    label: 'Payment Successful'
+                }
+            case 'refunded':
+                return {
+                    bg: 'bg-amber-50 text-amber-700 border-amber-100',
+                    icon: <AlertCircle className="w-3 h-3" />,
+                    label: 'Refunded'
+                }
+            default: // unpaid
+                return {
+                    bg: 'bg-slate-100 text-slate-600 border-slate-200',
+                    icon: <Clock className="w-3 h-3" />,
+                    label: 'Awaiting Payment'
+                }
+        }
+    }
+
+    const payMeta = getPaymentStatusStyles(order.payment_status)
 
     return (
         <div className="container mx-auto px-4 py-12 max-w-4xl">
             {/* HEADER SECTION */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Order Details</h1>
+                    <div className="flex items-center gap-3 mb-1">
+                        <h1 className="text-3xl font-black tracking-tight text-slate-900">Order Details</h1>
+                        <Badge variant="outline" className={`h-6 text-[10px] uppercase font-black px-2 ${payMeta.bg}`}>
+                            {payMeta.icon} <span className="ml-1">{order.payment_status}</span>
+                        </Badge>
+                    </div>
                     <p className="text-slate-500 flex items-center gap-2 mt-1 font-medium">
                         <Calendar className="w-4 h-4" />
                         Placed on {new Date(order.created_at).toLocaleDateString('en-IN', { dateStyle: 'long' })}
                     </p>
                 </div>
                 <div className="flex flex-col items-start md:items-end gap-2">
-                    <Badge className={`text-sm px-4 py-1 rounded-full uppercase font-bold shadow-none ${order.status === 'delivered' ? 'bg-green-100 text-green-700 hover:bg-green-100' : 'bg-blue-100 text-blue-700 hover:bg-blue-100'
+                    <Badge className={`text-sm px-4 py-1 rounded-full uppercase font-bold shadow-none ${order.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                         }`}>
                         {order.status}
                     </Badge>
@@ -117,8 +144,17 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
                                 <span className="text-2xl font-black text-white">₹{order.total.toLocaleString('en-IN')}</span>
                             </div>
                         </div>
-                        <div className="mt-8 pt-4 border-t border-white/5 text-[9px] uppercase tracking-[0.2em] text-center text-slate-500 font-bold">
-                            Paid via Cash on Delivery
+
+                        {/* PAYMENT STATUS FOOTER */}
+                        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center">
+                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${order.payment_status === 'paid' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-400 bg-white/5'
+                                }`}>
+                                {payMeta.icon}
+                                {payMeta.label}
+                            </div>
+                            <p className="mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                                Payment Method: {order.payment_method}
+                            </p>
                         </div>
                     </div>
                 </div>
