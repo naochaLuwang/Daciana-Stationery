@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server"
 import { notFound } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Package, Truck, CheckCircle2, Clock } from "lucide-react"
+import Link from "next/link";
 
 // 1. Define the correct type for the async params
 type tParams = Promise<{ id: string }>;
@@ -33,6 +34,16 @@ export default async function PublicTrackingPage(props: { params: tParams }) {
     return (
         <div className="min-h-screen bg-slate-50 py-20 px-4">
             <div className="max-w-xl mx-auto bg-white rounded-[2.5rem] border p-8 md:p-12 shadow-sm">
+                <div className="flex-1 lg:flex-none">
+                    <Link href="/" className="flex flex-col group min-w-fit">
+                        <span className="text-xl md:text-2xl font-black font-daciana tracking-[0.15em] leading-none text-slate-900 group-hover:text-primary transition-colors uppercase">
+                            DACIANA
+                        </span>
+                        <span className="text-[7px] md:text-[8px] font-bold tracking-[0.3em] text-slate-400 uppercase whitespace-nowrap mt-1">
+                            Stationery & Cosmetics
+                        </span>
+                    </Link>
+                </div>
                 <div className="text-center mb-12">
                     <h1 className="text-3xl font-black uppercase tracking-tighter">Track Order</h1>
                     <p className="text-slate-400 font-mono text-xs mt-2 uppercase">ID: {order.id}</p>
