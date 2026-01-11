@@ -56,11 +56,11 @@ export function ProductViewSection({ product }: { product: any }) {
                     onVariantChange={handleVariantChange}
                 />
 
-                <div className="pt-4">
+                {/* <div className="pt-4">
                     <Badge variant="outline" className="px-4 py-1">
                         Free Delivery on orders over ₹499
                     </Badge>
-                </div>
+                </div> */}
             </div>
         </div>
     )
