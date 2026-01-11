@@ -77,7 +77,7 @@ export function VariantSelector({ product, variants, onVariantChange }: any) {
             </div>
 
             {/* Variant Chips */}
-            {product.has_variants && (
+            {/* {product.has_variants && (
                 <div className="space-y-3">
                     <label className="text-sm font-bold uppercase text-slate-500 flex items-center gap-2">
                         <Tag className="w-3 h-3" /> Select Shade
@@ -99,6 +99,59 @@ export function VariantSelector({ product, variants, onVariantChange }: any) {
                                 <span className="text-sm font-bold">{v.title}</span>
                             </button>
                         ))}
+                    </div>
+                </div>
+            )} */}
+
+            {product.has_variants && (
+                <div className="space-y-4">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                        <Tag className="w-3.5 h-3.5" />
+                        {/* Dynamic Label based on data */}
+                        {variants[0]?.hex_code ? "Select Shade" : "Select Size"}
+                    </label>
+
+                    <div className="flex flex-wrap gap-3">
+                        {variants.map((v: any) => {
+                            const isSelected = selectedVariant.id === v.id;
+                            const isColor = !!v.hex_code;
+
+                            return (
+                                <button
+                                    key={v.id}
+                                    onClick={() => handleVariantClick(v)}
+                                    className={`relative flex items-center justify-center transition-all duration-300 active:scale-95 ${isColor
+                                            ? "p-1 rounded-full border-2" // Container for Color
+                                            : "h-12 min-w-[3rem] px-4 rounded-xl border-2" // Container for Size (M, L, S)
+                                        } ${isSelected
+                                            ? "border-primary bg-primary/5 shadow-sm"
+                                            : "border-slate-100 bg-white hover:border-slate-200"
+                                        }`}
+                                >
+                                    {isColor ? (
+                                        <>
+                                            {/* Large Color Swatch */}
+                                            <div
+                                                className="w-8 h-8 rounded-full border border-black/5 shadow-inner"
+                                                style={{ backgroundColor: v.hex_code }}
+                                            />
+                                            {/* Tooltip or text appearing on hover/select for color name */}
+                                            {isSelected && (
+                                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] px-2 py-1 rounded uppercase tracking-widest whitespace-nowrap">
+                                                    {v.title}
+                                                </span>
+                                            )}
+                                        </>
+                                    ) : (
+                                        /* Text-only variant (S, M, L) */
+                                        <span className={`text-xs font-black uppercase tracking-widest ${isSelected ? "text-primary" : "text-slate-600"
+                                            }`}>
+                                            {v.title}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}

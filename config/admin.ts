@@ -6,7 +6,8 @@ import {
     Users,
     PackageSearch, // Better for Inventory
     Truck,         // Better for Shipping
-    ClipboardList  // Better for Orders
+    ClipboardList, Mail,
+    Star // Better for Orders
 } from "lucide-react"
 
 export const adminConfig = {
@@ -18,6 +19,8 @@ export const adminConfig = {
         { title: "Inventory", href: "/admin/inventory", icon: PackageSearch }, // Changed to Package Search
         { title: "Customers", href: "/admin/customers", icon: Users }, // Added to match e-commerce flow
         { title: "Shipping", href: "/admin/shipping", icon: Truck }, // Changed to Truck icon
-        { title: "Settings", href: "/admin/settings", icon: Settings },
+        { title: "Messages", href: "/admin/messages", icon: Mail },
+        { titele: "Reviews", href: "/admin/reviews", icon: Star }, // Added Messages section
+        { title: "Legal Settings", href: "/admin/settings/legal", icon: Settings },
     ],
 }

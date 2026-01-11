@@ -25,7 +25,7 @@ export const productSchema = z.object({
             price: z.coerce.number().min(0).default(0),
             stock: z.coerce.number().min(0).default(0),
             sku: z.string().optional(),
-            hex_code: z.string().optional(),
+            hex_code: z.string().nullable().default(null),
             discount_type: z.enum(["none", "percentage", "amount"]).default("none"),
             discount_value: z.coerce.number().min(0).default(0),
             variant_image_urls: z.array(z.string()).default([]),

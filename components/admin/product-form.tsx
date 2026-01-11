@@ -238,7 +238,7 @@ export default function ProductForm({ categories = [], initialData, isEdit = fal
                                                 if (!checked) {
                                                     form.setValue("variants", []); // Clears variant validation errors
                                                 } else if (vFields.length === 0) {
-                                                    addV({ title: "", price: 0, stock: 0, discount_type: "none", discount_value: 0, hex_code: "#000000", variant_image_urls: [] });
+                                                    addV({ title: "", price: 0, stock: 0, discount_type: "none", discount_value: 0, hex_code: null, variant_image_urls: [] });
                                                 }
                                             }}
                                         />

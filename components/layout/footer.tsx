@@ -58,8 +58,8 @@ export function Footer() {
                         <h4 className="font-bold uppercase text-xs tracking-widest mb-6 text-slate-400">Shop & Info</h4>
                         <ul className="space-y-4 text-sm font-medium">
                             <li><Link href="/shop" className="hover:translate-x-1 transition-transform inline-block">All Products</Link></li>
-                            <li><Link href="/about" className="hover:translate-x-1 transition-transform inline-block">Our Story</Link></li>
-                            <li><Link href="/shipping" className="hover:translate-x-1 transition-transform inline-block">Shipping Guide</Link></li>
+                            {/* <li><Link href="/about" className="hover:translate-x-1 transition-transform inline-block">Our Story</Link></li>
+                            <li><Link href="/shipping" className="hover:translate-x-1 transition-transform inline-block">Shipping Guide</Link></li> */}
                             <li><Link href="/contact" className="hover:translate-x-1 transition-transform inline-block">Contact Us</Link></li>
                         </ul>
                     </div>
@@ -68,9 +68,9 @@ export function Footer() {
                     <div>
                         <h4 className="font-bold uppercase text-xs tracking-widest mb-6 text-slate-400">Legal</h4>
                         <ul className="space-y-4 text-sm font-medium">
-                            <li><Link href="/terms" className="hover:translate-x-1 transition-transform inline-block">Terms & Conditions</Link></li>
-                            <li><Link href="/returns" className="hover:translate-x-1 transition-transform inline-block">Return Policy</Link></li>
-                            <li><Link href="/privacy" className="hover:translate-x-1 transition-transform inline-block">Privacy Policy</Link></li>
+                            <li><Link href="/legal/terms_and_conditions" className="hover:translate-x-1 transition-transform inline-block">Terms & Conditions</Link></li>
+                            <li><Link href="/legal/return_policy" className="hover:translate-x-1 transition-transform inline-block">Return Policy</Link></li>
+                            <li><Link href="/legal/privacy_policy" className="hover:translate-x-1 transition-transform inline-block">Privacy Policy</Link></li>
                         </ul>
                     </div>
 
