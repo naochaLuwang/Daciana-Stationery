@@ -4,10 +4,25 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Printer, ArrowLeft, Package, User, MapPin, Loader2, Globe } from "lucide-react"
+import { Printer, ArrowLeft, User, MapPin, Loader2, Globe, CreditCard, ShieldCheck, CheckCircle2, Clock, AlertCircle } from "lucide-react"
 import Link from "next/link"
-import { QRCodeSVG } from "qrcode.react" // Import QR Code component
+import { QRCodeSVG } from "qrcode.react"
+
+// Helper function for Indian Currency Word Conversion
+const numberToWords = (num: number) => {
+    const a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
+    const b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+    const format = (n: number): string => {
+        if (n < 20) return a[n];
+        if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + a[n % 10] : "");
+        if (n < 1000) return a[Math.floor(n / 100)] + "hundred " + (n % 100 !== 0 ? format(n % 100) : "");
+        if (n < 100000) return format(Math.floor(n / 1000)) + "thousand " + (n % 1000 !== 0 ? format(n % 1000) : "");
+        if (n < 10000000) return format(Math.floor(n / 100000)) + "lakh " + (n % 100000 !== 0 ? format(n % 100000) : "");
+        return "";
+    };
+    return (format(Math.floor(num)) + "rupees only").toUpperCase();
+};
 
 export default function OrderDetailsPage() {
     const { id } = useParams()
@@ -15,7 +30,6 @@ export default function OrderDetailsPage() {
     const [order, setOrder] = useState<any>(null)
     const [loading, setLoading] = useState(true)
 
-    // Construct your tracking URL (replace with your actual domain)
     const trackingUrl = `https://dacianastore.in/track/${id}`
 
     useEffect(() => {
@@ -33,6 +47,20 @@ export default function OrderDetailsPage() {
 
     const handlePrint = () => window.print()
 
+    // Color Coding Logic
+    const getStatusStyles = (status: string) => {
+        const s = status?.toLowerCase()
+        if (s === 'paid') return {
+            bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-100', icon: <CheckCircle2 className="w-3 h-3" />
+        }
+        if (s === 'pending') return {
+            bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100', icon: <Clock className="w-3 h-3" />
+        }
+        return {
+            bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-100', icon: <AlertCircle className="w-3 h-3" />
+        }
+    }
+
     if (loading) return (
         <div className="flex h-screen items-center justify-center">
             <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
@@ -40,6 +68,8 @@ export default function OrderDetailsPage() {
     )
 
     if (!order) return <div className="p-10 text-center">Order not found</div>
+
+    const statusStyle = getStatusStyles(order.payment_status)
 
     return (
         <div className="container mx-auto py-10 px-4 max-w-4xl">
@@ -59,50 +89,58 @@ export default function OrderDetailsPage() {
                 }
             `}</style>
 
-            {/* Header / Actions */}
             <div className="flex justify-between items-center mb-8 no-print">
                 <Button variant="ghost" asChild className="rounded-full">
                     <Link href="/admin/orders">
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Orders
                     </Link>
                 </Button>
-                <div className="flex gap-3">
-                    <Button variant="outline" onClick={handlePrint} className="rounded-full shadow-sm">
-                        <Printer className="w-4 h-4 mr-2" /> Print Invoice
-                    </Button>
-                </div>
+                <Button onClick={handlePrint} className="rounded-full shadow-lg bg-slate-900 hover:bg-slate-800 transition-all">
+                    <Printer className="w-4 h-4 mr-2" /> Print Invoice
+                </Button>
             </div>
 
-            {/* Invoice Container */}
-            <div id="printable-invoice" className="bg-white border p-12 rounded-[2.5rem] shadow-sm print:shadow-none print:border-none">
+            <div id="printable-invoice" className="bg-white border p-12 rounded-[2.5rem] shadow-sm print:shadow-none print:border-none relative overflow-hidden">
 
-                {/* BRANDING & INVOICE TITLE */}
-                <div className="flex justify-between items-start mb-12">
+                {/* Background Status Watermark (Visual Only) */}
+                <div className={`absolute -top-10 -right-10 text-8xl font-black uppercase opacity-[0.03] rotate-12 pointer-events-none select-none ${statusStyle.text}`}>
+                    {order.payment_status}
+                </div>
+
+                {/* Branding & Business Info */}
+                <div className="flex justify-between items-start mb-2 relative z-10">
                     <div className="flex flex-col">
                         <span className="text-3xl font-black font-daciana tracking-[0.15em] leading-none text-slate-900 uppercase">
                             DACIANA
                         </span>
-                        <span className="text-[9px] font-bold tracking-[0.3em] text-slate-400 uppercase whitespace-nowrap mt-1">
+                        <span className="text-[9px] font-bold tracking-[0.3em] text-slate-400 uppercase whitespace-nowrap mt-1 mb-4">
                             Stationery & Cosmetics
                         </span>
-                    </div>
-                    <div>
-                        <div className="text-right">
-                            <h1 className="text-5xl font-black uppercase tracking-tighter text-slate-100 leading-none">Invoice</h1>
-                            <p className="text-slate-500 font-mono text-xs mt-2 uppercase tracking-widest">Ref: {order.id.slice(0, 8)}</p>
+                        <div className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                            <p>Kontha khabam mayai leikai Imphal,</p>
+                            <p>Manipur Imphal 795002</p>
+                            <p className="font-bold text-slate-700">Phone: 6909013764</p>
                         </div>
-                        <div className="text-right space-y-1">
-                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">Date Issued</p>
+
+                        {/* Payment Status Badge - COLOR CODED */}
+                        <div className={`mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border} text-[10px] font-black uppercase tracking-widest shadow-sm`}>
+                            {statusStyle.icon}
+                            Status: {order.payment_status || 'Paid'}
+                        </div>
+                    </div>
+
+                    <div className="text-right">
+                        <h1 className="text-5xl font-black uppercase tracking-tighter text-slate-100 leading-none">Invoice</h1>
+                        <p className="text-slate-500 font-mono text-xs mt-2 uppercase tracking-widest">Ref: {order.id.slice(0, 8)}</p>
+                        <div className="mt-6">
+                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Date Issued</p>
                             <p className="font-bold text-slate-900">{new Date(order.created_at).toLocaleDateString('en-IN', { dateStyle: 'long' })}</p>
                         </div>
                     </div>
-
                 </div>
 
-
-
-                {/* CUSTOMER & SHIPPING */}
-                <div className="grid grid-cols-2 gap-16 mb-16">
+                {/* Customer Detail Section */}
+                <div className="grid grid-cols-2 gap-16 mb-8 border-t border-b border-slate-50 py-8 relative z-10">
                     <div>
                         <h3 className="text-[10px] font-black text-slate-400 uppercase mb-4 flex items-center gap-2 tracking-[0.2em]">
                             <User className="w-3 h-3" /> Customer Detail
@@ -118,15 +156,11 @@ export default function OrderDetailsPage() {
                             {order.shipping_address?.street},<br />
                             Pincode: <span className="font-black text-slate-900">{order.shipping_address?.pincode}</span>
                         </p>
-                        <div className="mt-3 flex items-center gap-2 text-indigo-600 font-bold text-[10px] uppercase">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-                            {order.shipping_label}
-                        </div>
                     </div>
                 </div>
 
-                {/* ITEMS TABLE */}
-                <div className="mb-12">
+                {/* Items Table */}
+                <div className="mb-10 relative z-10">
                     <table className="w-full">
                         <thead>
                             <tr className="text-[10px] text-slate-400 uppercase tracking-[0.2em] border-b pb-4 font-black">
@@ -138,7 +172,7 @@ export default function OrderDetailsPage() {
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {order.order_items.map((item: any) => (
-                                <tr key={item.id} className="text-sm">
+                                <tr key={item.id} className="text-sm group">
                                     <td className="py-6">
                                         <p className="font-black text-slate-900 uppercase tracking-tight leading-none">{item.product_name}</p>
                                         <p className="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-widest">{item.variant_title}</p>
@@ -152,50 +186,69 @@ export default function OrderDetailsPage() {
                     </table>
                 </div>
 
-                {/* TOTALS & QR SECTION */}
-                <div className="grid grid-cols-2 pt-10 border-t-2 border-slate-900 border-dashed items-start">
-                    {/* QR CODE DIV */}
-                    <div className="flex items-center gap-5">
-                        <div className="p-2 border border-slate-100 rounded-xl bg-slate-50">
-                            <QRCodeSVG
-                                value={trackingUrl}
-                                size={80}
-                                level="H"
-                                includeMargin={false}
-                                bgColor="transparent"
-                            />
+                {/* Amount in Words */}
+                <div className="bg-slate-50 p-6 rounded-2xl mb-10 flex justify-between items-center border border-slate-100 relative z-10">
+                    <div className="space-y-1">
+                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest italic">Amount in words</p>
+                        <p className="text-xs font-black text-slate-700 uppercase tracking-tight italic">{numberToWords(order.total)}</p>
+                    </div>
+                    <div className="text-right">
+                        <div className="flex items-center gap-2 justify-end text-slate-400 mb-1">
+                            <CreditCard className="w-3 h-3" />
+                            <span className="text-[9px] font-bold uppercase tracking-widest">Mode</span>
                         </div>
-                        <div className="max-w-[150px]">
-                            <p className="text-[9px] font-black uppercase text-slate-900 tracking-tighter mb-1">Track Delivery</p>
-                            <p className="text-[8px] text-slate-400 leading-tight font-medium">Scan this code to view real-time shipping status for this order.</p>
+                        <p className="text-xs font-black text-slate-900 uppercase tracking-widest">{order.payment_method || 'Online'}</p>
+                    </div>
+                </div>
+
+                {/* Totals & T&C Section */}
+                <div className="grid grid-cols-2 pt-5 border-t-2 border-slate-900 border-dashed items-start relative z-10">
+                    <div className="space-y-8">
+                        <div className="flex items-center gap-5">
+                            <div className="p-2 border border-slate-100 rounded-xl bg-slate-50">
+                                <QRCodeSVG value={trackingUrl} size={70} level="H" bgColor="transparent" />
+                            </div>
+                            <div className="max-w-[150px]">
+                                <p className="text-[9px] font-black uppercase text-slate-900 tracking-tighter mb-1">Track Delivery</p>
+                                <p className="text-[8px] text-slate-400 leading-tight font-medium">Scan to view real-time shipping status.</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-900 text-white p-4 rounded-2xl mr-10 shadow-lg shadow-slate-200">
+                            <p className="text-[9px] font-black uppercase tracking-widest mb-2 opacity-50">Terms & Conditions</p>
+                            <p className="text-[10px] font-bold leading-tight italic">
+                                "Goods once sold will not be taken back or exchanged."
+                            </p>
                         </div>
                     </div>
 
-                    {/* TOTAL CALCULATIONS */}
                     <div className="flex flex-col items-end space-y-3">
                         <div className="flex justify-between w-full max-w-[200px] text-[10px] font-bold uppercase text-slate-400 tracking-widest">
                             <span>Subtotal</span>
-                            <span className="text-slate-900 font-black">₹{order.total - order.shipping_price}</span>
+                            <span className="text-slate-900 font-black">₹{order.total - (order.shipping_price || 0)}</span>
                         </div>
                         <div className="flex justify-between w-full max-w-[200px] text-[10px] font-bold uppercase text-slate-400 tracking-widest">
                             <span>Shipping</span>
-                            <span className="text-slate-900 font-black text-right">₹{order.shipping_price}</span>
+                            <span className="text-slate-900 font-black text-right">₹{order.shipping_price || 0}</span>
                         </div>
-                        <div className="flex justify-between w-full max-w-[240px] text-3xl font-black border-t-4 border-slate-900 pt-4">
-                            <span className="uppercase tracking-tighter text-sm self-center">Grand Total</span>
+                        <div className="flex justify-between w-full max-w-[240px] text-4xl font-black border-t-4 border-slate-900 pt-4 mt-2">
+                            <span className="uppercase tracking-tighter text-xs self-center text-slate-400">Total</span>
                             <span className="tracking-tighter italic">₹{order.total}</span>
                         </div>
                     </div>
                 </div>
 
-                {/* FOOTER */}
-                <div className="mt-20 flex justify-between items-center border-t border-slate-50 pt-8">
-                    <p className="text-[8px] text-slate-300 uppercase font-black tracking-[0.4em]">
-                        Official Daciana Invoice
-                    </p>
-                    <div className="flex items-center gap-2 text-slate-300">
+                {/* Footer */}
+                <div className="mt-20 flex justify-between items-center border-t border-slate-50 pt-8 relative z-10">
+                    <div className="flex items-center gap-2 text-slate-400">
+                        <ShieldCheck className="w-3 h-3" />
+                        <p className="text-[8px] uppercase font-black tracking-[0.4em]">
+                            Computer Generated Invoice
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-400">
                         <Globe className="w-3 h-3" />
-                        <span className="text-[8px] font-black tracking-widest uppercase italic">www.daciana.in</span>
+                        <span className="text-[8px] font-black tracking-widest uppercase italic font-daciana">www.dacianastore.in</span>
                     </div>
                 </div>
             </div>

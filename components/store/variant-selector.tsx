@@ -58,22 +58,29 @@ export function VariantSelector({ product, variants, onVariantChange }: any) {
     return (
         <div className="space-y-6">
             {/* Price Section */}
-            <div className="flex items-baseline gap-3">
-                <div className="text-4xl font-bold text-slate-900 font-mono">
-                    ₹{salePrice.toLocaleString('en-IN')}
+            <div className="flex flex-col">
+                {/* Top Row: Prices and Badge */}
+                <div className="flex items-baseline gap-3">
+                    <div className="text-4xl font-bold text-slate-900 font-mono">
+                        ₹{salePrice.toLocaleString('en-IN')}
+                    </div>
+
+                    {selectedVariant.discount_type !== 'none' && (
+                        <>
+                            <div className="text-lg text-slate-400 line-through">
+                                ₹{Number(selectedVariant.price).toLocaleString('en-IN')}
+                            </div>
+                            <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-none px-3">
+                                {discountLabel}
+                            </Badge>
+                        </>
+                    )}
                 </div>
-                {selectedVariant.discount_type !== 'none' && (
-                    <>
-                        <div className="text-lg text-slate-400 line-through">
-                            ₹{Number(selectedVariant.price).toLocaleString('en-IN')}
-                        </div>
 
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-none px-3">
-                            {discountLabel}
-                        </Badge>
-                    </>
-
-                )}
+                {/* Bottom Row: Tax Info */}
+                <p className="text-[11px] font-bold uppercase tracking-tighter text-emerald-600 mt-1">
+                    Inclusive of all taxes
+                </p>
             </div>
 
             {/* Variant Chips */}
@@ -121,8 +128,8 @@ export function VariantSelector({ product, variants, onVariantChange }: any) {
                                     key={v.id}
                                     onClick={() => handleVariantClick(v)}
                                     className={`relative flex items-center justify-center transition-all duration-300 active:scale-95 ${isColor
-                                            ? "p-1 rounded-full border-2" // Container for Color
-                                            : "h-12 min-w-[3rem] px-4 rounded-xl border-2" // Container for Size (M, L, S)
+                                        ? "p-1 rounded-full border-2" // Container for Color
+                                        : "h-12 min-w-[3rem] px-4 rounded-xl border-2" // Container for Size (M, L, S)
                                         } ${isSelected
                                             ? "border-primary bg-primary/5 shadow-sm"
                                             : "border-slate-100 bg-white hover:border-slate-200"

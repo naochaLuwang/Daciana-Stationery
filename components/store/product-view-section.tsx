@@ -47,17 +47,17 @@ export function ProductViewSection({ product }: { product: any }) {
                 </div>
 
                 {/* 2. Pricing Section (Added Tax Label) */}
-                <div className="mb-8">
+                {/* <div className="mb-8">
                     <div className="flex items-baseline gap-2">
                         <span className="text-3xl font-black text-slate-900">
                             ₹{selectedVariant?.price || product.base_price}
                         </span>
-                        {/* Optional: Add original price if there's a discount */}
+                      
                     </div>
                     <p className="text-[11px] font-bold uppercase tracking-tighter text-emerald-600 mt-1">
                         Inclusive of all taxes
                     </p>
-                </div>
+                </div> */}
 
                 <hr className="mb-8" />
 
