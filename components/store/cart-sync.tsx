@@ -43,6 +43,7 @@ export function CartSync({ userId }: { userId: string | null }) {
                     name: ci.products.name,
                     variantTitle: ci.product_variants.title,
                     price: Number(ci.unit_price),
+                    mrp: Number(ci.product_variants.price),
                     image: ci.products.thumbnail_url,
                     quantity: ci.quantity,
                     stock: ci.product_variants.stock

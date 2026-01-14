@@ -1,11 +1,11 @@
 import { createClient } from "@/utils/supabase/server"
 import { notFound } from "next/navigation"
+import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import {
-    Package, Home, Phone, Calendar, CreditCard,
-    ShieldCheck, Clock, AlertCircle, XCircle,
-    Truck, CheckCircle2, MessageCircle, MapPin
+    Package, Calendar, ShieldCheck, Clock, AlertCircle, XCircle,
+    Truck, CheckCircle2, MessageCircle, MapPin, Printer
 } from "lucide-react"
 import { CancelOrderButton } from "@/components/orders/cancel-order-button"
 import { Button } from "@/components/ui/button"
@@ -27,7 +27,7 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
     const address = order.shipping_address as any
 
     // WhatsApp Support Logic
-    const whatsappNumber = "916909013764" // Replace with your actual WhatsApp number
+    const whatsappNumber = "916909013764"
     const supportMessage = encodeURIComponent(`Hi Daciana Support, I have a query regarding my Order ID: ${id}. Current status is ${order.status}.`)
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${supportMessage}`
 
@@ -57,7 +57,7 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-4xl font-black tracking-tighter text-slate-900">Order Details</h1>
                         <Badge className={`px-3 py-1 rounded-full uppercase font-black text-[10px] ${order.status === 'delivered' ? 'bg-emerald-500' :
-                                order.status === 'cancelled' ? 'bg-red-500' : 'bg-blue-600'
+                            order.status === 'cancelled' ? 'bg-red-500' : 'bg-blue-600'
                             }`}>
                             {order.status}
                         </Badge>
@@ -70,6 +70,14 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
 
                 <div className="flex items-center gap-3">
                     <CancelOrderButton orderId={id} currentStatus={order.status} />
+
+                    {/* INVOICE BUTTON */}
+                    <Button asChild variant="outline" className="rounded-2xl border-2 border-slate-100 font-bold hover:bg-slate-50 transition-all">
+                        <Link href={`/profile/orders/${id}/invoice`}>
+                            <Printer className="w-4 h-4 mr-2" /> Invoice
+                        </Link>
+                    </Button>
+
                     <Button asChild className="rounded-2xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold shadow-lg shadow-emerald-100 border-none">
                         <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                             <MessageCircle className="w-4 h-4 mr-2" /> Help
@@ -79,59 +87,38 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                {/* LEFT: TIMELINE & ITEMS (8 COLS) */}
+                {/* LEFT: TIMELINE & ITEMS */}
                 <div className="lg:col-span-8 space-y-10">
-
-                    {/* TRACKING CARD */}
                     <div className="bg-white border-2 border-slate-50 rounded-[2.5rem] p-10 shadow-sm">
                         <div className="flex justify-between items-center mb-10">
                             <h2 className="font-black text-slate-900 uppercase tracking-widest text-xs">Live Tracking</h2>
                             <span className="text-[10px] font-mono text-slate-300 uppercase">Ref: {id.slice(0, 8)}</span>
                         </div>
-
                         <div className="relative">
                             {steps.map((step, idx) => {
                                 const Icon = step.icon
                                 const isCompleted = idx <= currentIndex
                                 const isCurrent = idx === currentIndex
                                 const isCancelled = order.status === 'cancelled'
-
                                 if (isCancelled && idx > 0) return null
-
                                 return (
                                     <div key={step.status} className="relative flex gap-8 pb-12 last:pb-0">
                                         {idx !== steps.length - 1 && !isCancelled && (
-                                            <div className={`absolute left-6 top-12 w-[3px] h-full rounded-full ${idx < currentIndex ? 'bg-slate-900' : 'bg-slate-50'
-                                                }`} />
+                                            <div className={`absolute left-6 top-12 w-[3px] h-full rounded-full ${idx < currentIndex ? 'bg-slate-900' : 'bg-slate-50'}`} />
                                         )}
-                                        <div className={`relative z-10 w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-700 ${isCompleted ? 'bg-slate-900 border-slate-900 text-white shadow-xl shadow-slate-200' : 'bg-white border-slate-100 text-slate-200'
-                                            } ${isCurrent && !isCancelled ? 'ring-8 ring-slate-50' : ''}`}>
+                                        <div className={`relative z-10 w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-700 ${isCompleted ? 'bg-slate-900 border-slate-900 text-white shadow-xl shadow-slate-200' : 'bg-white border-slate-100 text-slate-200'} ${isCurrent && !isCancelled ? 'ring-8 ring-slate-50' : ''}`}>
                                             <Icon className="w-6 h-6" />
                                         </div>
                                         <div className="pt-1">
-                                            <h3 className={`font-black uppercase text-sm tracking-tight ${isCompleted ? 'text-slate-900' : 'text-slate-200'}`}>
-                                                {step.label}
-                                            </h3>
+                                            <h3 className={`font-black uppercase text-sm tracking-tight ${isCompleted ? 'text-slate-900' : 'text-slate-200'}`}>{step.label}</h3>
                                             <p className="text-xs text-slate-400 font-medium mt-1">{step.desc}</p>
                                         </div>
                                     </div>
                                 )
                             })}
-                            {order.status === 'cancelled' && (
-                                <div className="flex gap-8 items-start">
-                                    <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center border-2 border-red-100">
-                                        <XCircle className="w-6 h-6" />
-                                    </div>
-                                    <div className="pt-1">
-                                        <h3 className="font-black uppercase text-sm text-red-600">Order Cancelled</h3>
-                                        <p className="text-xs text-red-400 font-medium mt-1">Inventory has been updated.</p>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
 
-                    {/* ITEMS CARD */}
                     <div className="bg-white border-2 border-slate-50 rounded-[2.5rem] overflow-hidden shadow-sm">
                         <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
                             <h2 className="font-black text-slate-900 uppercase tracking-widest text-[10px]">Parcel Contents</h2>
@@ -139,7 +126,7 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
                         </div>
                         <div className="divide-y divide-slate-50">
                             {order.order_items.map((item: any) => (
-                                <div key={item.id} className="p-8 flex items-center gap-6 hover:bg-slate-50/20 transition-all">
+                                <div key={item.id} className="p-8 flex items-center gap-6">
                                     <div className="w-16 h-16 bg-slate-50 rounded-[1.25rem] flex items-center justify-center font-black text-slate-300 text-xs border border-slate-100">
                                         {item.quantity}x
                                     </div>
@@ -156,26 +143,18 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
                     </div>
                 </div>
 
-                {/* RIGHT: ADDRESS & SUMMARY (4 COLS) */}
+                {/* RIGHT: ADDRESS & SUMMARY */}
                 <div className="lg:col-span-4 space-y-8">
-                    {/* SHIPPING */}
                     <div className="bg-white border-2 border-slate-50 rounded-[2.5rem] p-8 shadow-sm">
-                        <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-8 flex items-center gap-2">
-                            <MapPin className="w-3 h-3" /> Delivery Point
-                        </h3>
+                        <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-8 flex items-center gap-2"><MapPin className="w-3 h-3" /> Delivery Point</h3>
                         <div className="space-y-1">
                             <p className="font-black text-slate-900 text-xl tracking-tighter">{address?.full_name}</p>
-                            <p className="text-slate-500 font-medium text-sm leading-relaxed pt-2">{address?.street}</p>
+                            <p className="text-slate-500 font-medium text-sm pt-2">{address?.street}</p>
                             <p className="font-black text-slate-900 text-sm mt-2">{address?.pincode}</p>
-                            <div className="pt-6 mt-6 border-t border-slate-50 flex items-center justify-between">
-                                <span className="text-[10px] font-black uppercase text-slate-300">Contact</span>
-                                <span className="text-slate-900 font-bold text-sm">{address?.phone}</span>
-                            </div>
                         </div>
                     </div>
 
-                    {/* SUMMARY */}
-                    <div className="bg-slate-900 text-white rounded-[3rem] p-10 shadow-2xl shadow-blue-100">
+                    <div className="bg-slate-900 text-white rounded-[3rem] p-10 shadow-2xl">
                         <div className="flex justify-between items-center mb-10">
                             <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Billing</h3>
                             <Badge variant="outline" className={`h-5 text-[8px] border-white/10 uppercase text-white/50 ${payMeta.bg}`}>
@@ -183,20 +162,11 @@ export default async function OrderDetailsPage(props: { params: tParams }) {
                             </Badge>
                         </div>
                         <div className="space-y-5 text-sm">
-                            <div className="flex justify-between text-slate-400 font-medium">
-                                <span>Cart Total</span>
-                                <span>₹{(order.total - order.shipping_price).toLocaleString('en-IN')}</span>
-                            </div>
-                            <div className="flex justify-between text-slate-400 font-medium">
-                                <span className="flex flex-col">
-                                    Shipping Fee
-                                    <span className="text-[9px] text-blue-400 font-black uppercase tracking-widest">{order.shipping_label}</span>
-                                </span>
-                                <span>₹{order.shipping_price.toLocaleString('en-IN')}</span>
-                            </div>
+                            <div className="flex justify-between text-slate-400"><span>Cart Total</span><span>₹{(order.total - order.shipping_price).toLocaleString('en-IN')}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>Shipping</span><span>₹{order.shipping_price.toLocaleString('en-IN')}</span></div>
                             <Separator className="bg-white/10 my-6" />
                             <div className="flex justify-between items-end">
-                                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest pb-1">Total Paid</span>
+                                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest pb-1">Total </span>
                                 <span className="text-4xl font-black italic tracking-tighter">₹{order.total.toLocaleString('en-IN')}</span>
                             </div>
                         </div>

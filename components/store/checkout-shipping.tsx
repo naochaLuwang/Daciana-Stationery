@@ -37,7 +37,8 @@ export function CheckoutShipping({ pincode }: { pincode: string }) {
             setAreaName(data.name)
             // Auto-select first method
             if (data.shipping_methods.length > 0) {
-                setSelectedShipping(data.shipping_methods[0].id, Number(data.shipping_methods[0].price))
+                const firstMethod = data.shipping_methods[0];
+                setSelectedShipping(firstMethod.id, Number(firstMethod.price), firstMethod.name);
             }
         } else {
             setMethods([])
@@ -70,7 +71,7 @@ export function CheckoutShipping({ pincode }: { pincode: string }) {
                 value={selectedShippingId || ""}
                 onValueChange={(id) => {
                     const m = methods.find(method => method.id === id)
-                    setSelectedShipping(id, Number(m.price))
+                    setSelectedShipping(id, Number(m.price), m.name)
                 }}
             >
                 {methods.map((m) => (

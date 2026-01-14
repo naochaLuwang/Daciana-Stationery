@@ -47,6 +47,7 @@ export function VariantSelector({ product, variants, onVariantChange }: any) {
             name: product.name,
             variantTitle: selectedVariant.title,
             price: salePrice,
+            mrp: Number(selectedVariant.price),
             image: selectedVariant.image_url || product.thumbnail_url,
             quantity: quantity,
             stock: selectedVariant.stock

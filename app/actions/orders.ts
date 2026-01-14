@@ -9,13 +9,16 @@ import { revalidatePath } from "next/cache"
 /**
  * PLACE ORDER
  */
+/**
+ * PLACE ORDER - UPDATED TO INCLUDE MRP
+ */
 export async function placeOrder(formData: any, cartItems: any[], shippingDetails: any) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error("User not authenticated")
 
     try {
-        // 1. Check stock availability
+        // 1. Stock Check
         for (const item of cartItems) {
             const { data: variant, error: stockErr } = await supabase
                 .from("product_variants")
@@ -25,11 +28,11 @@ export async function placeOrder(formData: any, cartItems: any[], shippingDetail
 
             if (stockErr || !variant) throw new Error(`Product variant not found`)
             if (variant.stock < item.quantity) {
-                throw new Error(`Insufficient stock for ${item.name} (${variant.title}). Only ${variant.stock} left.`)
+                throw new Error(`Insufficient stock for ${item.name}.`)
             }
         }
 
-        // 2. Insert the main Order
+        // 2. Insert Order Header
         const { data: order, error: orderError } = await supabase
             .from('orders')
             .insert([{
@@ -47,7 +50,7 @@ export async function placeOrder(formData: any, cartItems: any[], shippingDetail
 
         if (orderError) throw orderError
 
-        // 3. Insert Order Items
+        // 3. Insert Order Items (Capturing MRP for historical record)
         const itemsToInsert = cartItems.map(item => ({
             order_id: order.id,
             product_id: item.id,
@@ -55,7 +58,8 @@ export async function placeOrder(formData: any, cartItems: any[], shippingDetail
             product_name: item.name,
             variant_title: item.variantTitle,
             quantity: item.quantity,
-            unit_price: item.price
+            unit_price: item.price,
+            mrp: item.mrp || item.price, // Save original price here
         }))
 
         const { error: itemsError } = await supabase
@@ -64,7 +68,7 @@ export async function placeOrder(formData: any, cartItems: any[], shippingDetail
 
         if (itemsError) throw itemsError
 
-        // 4. Decrease Stock
+        // 4. Update Stock via RPC
         for (const item of cartItems) {
             await supabase.rpc('decrement_stock', {
                 row_id: item.variantId,
@@ -73,7 +77,6 @@ export async function placeOrder(formData: any, cartItems: any[], shippingDetail
         }
 
         revalidatePath("/admin/orders")
-        revalidatePath("/admin/products")
         revalidatePath("/profile")
 
         return { success: true, orderId: order.id }
