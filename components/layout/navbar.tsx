@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { createClient } from "@/utils/supabase/server"
-import { LogOut, User } from "lucide-react"
+import { LogOut, User, Box, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -82,34 +82,76 @@ export default async function Navbar() {
                                 </Link>
                             ) : (
                                 <div className="hidden sm:block">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 transition-colors">
-                                                <User className="w-5 h-5 text-slate-700" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-52 mt-2 rounded-xl shadow-xl border-slate-100">
-                                            <div className="px-4 py-3 border-b border-slate-50 mb-1">
-                                                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Signed in as</p>
-                                                <p className="text-xs font-semibold text-slate-900 truncate">{user.email}</p>
-                                            </div>
-                                            <DropdownMenuItem asChild className="cursor-pointer">
-                                                <Link href="/profile">My Profile</Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem asChild className="cursor-pointer">
-                                                <Link href="/profile/orders">My Orders</Link>
-                                            </DropdownMenuItem>
-                                            <hr className="my-1 border-slate-50" />
-                                            <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer">
-                                                <form action={signOut} className="w-full">
-                                                    <button className="flex items-center w-full">
-                                                        <LogOut className="w-4 h-4 mr-2" />
-                                                        Sign Out
-                                                    </button>
-                                                </form>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    <div className="hidden sm:block">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 transition-all border border-transparent active:scale-95">
+                                                    <User className="w-5 h-5 text-slate-700" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-56 mt-3 p-2 rounded-2xl shadow-2xl border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+                                                {/* User Header */}
+                                                <div className="px-3 py-3 mb-2 bg-slate-50/50 rounded-xl">
+                                                    <p className="text-[9px] text-slate-400 uppercase font-black tracking-[0.1em]">Account</p>
+                                                    <p className="text-xs font-bold text-slate-900 truncate">{user.email}</p>
+                                                </div>
+
+                                                {/* Menu Items with Icons */}
+                                                <DropdownMenuItem asChild className="rounded-lg py-2.5 focus:bg-slate-50 cursor-pointer">
+                                                    <Link href="/profile" className="flex items-center gap-3 w-full">
+                                                        <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                                                            <User className="w-4 h-4" />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-700">My Profile</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+
+                                                <DropdownMenuItem asChild className="rounded-lg py-2.5 focus:bg-slate-50 cursor-pointer">
+                                                    <Link href="/profile/orders" className="flex items-center gap-3 w-full">
+                                                        <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600">
+                                                            <Box className="w-4 h-4" />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-700">My Orders</span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+
+                                                {/* <DropdownMenuItem asChild className="rounded-lg py-2.5 focus:bg-slate-50 cursor-pointer">
+                                                    <Link href="/wishlist" className="flex items-center gap-3 w-full">
+                                                        <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600">
+                                                            <Heart className="w-4 h-4" />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-700">Wishlist</span>
+                                                    </Link>
+                                                </DropdownMenuItem> */}
+
+                                                {/* Admin Quick Link (Optional check) */}
+                                                {user.email?.includes('admin') && (
+                                                    <DropdownMenuItem asChild className="rounded-lg py-2.5 focus:bg-slate-50 cursor-pointer">
+                                                        <Link href="/admin" className="flex items-center gap-3 w-full">
+                                                            <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white">
+                                                                <Settings className="w-4 h-4" />
+                                                            </div>
+                                                            <span className="text-xs font-bold text-slate-700">Admin Dashboard</span>
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                )}
+
+                                                <div className="my-2 border-t border-slate-100" />
+
+                                                {/* Sign Out */}
+                                                <DropdownMenuItem className="p-0 focus:bg-transparent">
+                                                    <form action={signOut} className="w-full px-1">
+                                                        <button className="flex items-center gap-3 w-full p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors group">
+                                                            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                                                                <LogOut className="w-4 h-4" />
+                                                            </div>
+                                                            <span className="text-xs font-black uppercase tracking-widest">Sign Out</span>
+                                                        </button>
+                                                    </form>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
                                 </div>
                             )}
 

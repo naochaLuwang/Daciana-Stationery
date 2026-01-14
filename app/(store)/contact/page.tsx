@@ -40,7 +40,7 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Email Us</p>
-                                        <p className="text-slate-900 font-bold">hello@daciana.com</p>
+                                        <p className="text-slate-900 font-bold">dacianaenterprises@gmail.com</p>
                                     </div>
                                 </div>
 
@@ -50,7 +50,7 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Call Us</p>
-                                        <p className="text-slate-900 font-bold">+91 XXXXX XXXXX</p>
+                                        <p className="text-slate-900 font-bold">+91 6909013764</p>
                                     </div>
                                 </div>
 
@@ -60,7 +60,7 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Business Hours</p>
-                                        <p className="text-slate-900 font-bold">Mon — Fri: 10AM - 6PM</p>
+                                        <p className="text-slate-900 font-bold">Mon — Sun: 10AM - 6PM</p>
                                     </div>
                                 </div>
                             </div>
@@ -69,9 +69,8 @@ export default function ContactPage() {
                         <div className="p-8 rounded-3xl bg-slate-50 border border-slate-100">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-900 mb-3">Our Atelier</h3>
                             <p className="text-sm text-slate-500 leading-relaxed">
-                                123 Boutique Square, Design District<br />
-                                Mumbai, Maharashtra 400001<br />
-                                India
+                                Kontha Khabam, Lai Haraopham <br />
+                                P.O. Mantripukhri, Imphal- 795002
                             </p>
                         </div>
                     </div>

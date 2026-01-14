@@ -81,7 +81,7 @@ export function Footer() {
                             <div className="flex gap-3">
                                 <MapPin className="w-5 h-5 text-slate-400 shrink-0" />
                                 <span className="text-slate-600 leading-tight">
-                                    Kontha Khabam, Lai Haraopham <br /> Po. Mantripukhri, Imphal- 795002
+                                    Kontha Khabam, Lai Haraopham <br /> P.O. Mantripukhri, Imphal- 795002
                                 </span>
                             </div>
                             <div className="flex gap-3">
