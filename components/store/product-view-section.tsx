@@ -43,7 +43,7 @@ export function ProductViewSection({ product }: { product: any }) {
                     <p className="text-sm text-muted-foreground uppercase tracking-widest font-semibold">
                         {product.brand}
                     </p>
-                    <h1 className="text-4xl font-bold mt-2 text-slate-900">{product.name}</h1>
+                    <h1 className="text-2xl font-bold mt-2 text-slate-900">{product.name}</h1>
                 </div>
 
                 {/* 2. Pricing Section (Added Tax Label) */}
