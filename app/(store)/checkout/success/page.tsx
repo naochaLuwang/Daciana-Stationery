@@ -2,54 +2,51 @@
 
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { CheckCircle2, Package, ArrowRight, Home } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { CheckCircle2, Package, Home } from "lucide-react"
 
 export default function OrderSuccessPage() {
     const searchParams = useSearchParams()
     const orderId = searchParams.get("orderId")
 
     return (
-        <div className="container mx-auto px-4 py-20 min-h-[70vh] flex flex-col items-center justify-center text-center">
-            {/* Success Icon */}
-            <div className="mb-6 bg-green-50 p-4 rounded-full">
-                <CheckCircle2 className="w-16 h-16 text-green-600 animate-in zoom-in duration-500" />
-            </div>
-
-            <h1 className="text-4xl font-black text-slate-900 mb-2">Thank You!</h1>
-            <p className="text-lg text-slate-600 mb-8 max-w-md">
-                Your order has been placed successfully. We've sent a confirmation email to your inbox.
-            </p>
-
-            {/* Order Info Card */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-10 w-full max-w-md">
-                <div className="flex justify-between items-center mb-4">
-                    <span className="text-slate-500 font-medium text-sm">Order Number</span>
-                    <span className="text-slate-900 font-bold font-mono">#{orderId?.slice(0, 8).toUpperCase()}</span>
+        <div className="min-h-screen bg-white flex items-center justify-center px-4">
+            <div className="text-center max-w-md">
+                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-600" />
                 </div>
-                <div className="flex justify-between items-center">
-                    <span className="text-slate-500 font-medium text-sm">Payment Method</span>
-                    <span className="text-slate-900 font-bold text-sm">Cash on Delivery</span>
+
+                <h1 className="text-2xl font-bold text-slate-900 mb-2">Order Placed!</h1>
+                <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+                    Your order has been placed successfully. You&apos;ll receive a confirmation shortly.
+                </p>
+
+                <div className="bg-slate-50 rounded-2xl p-5 mb-8 text-left space-y-3">
+                    <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Order ID</span>
+                        <span className="text-xs font-bold font-mono text-slate-900">#{orderId?.slice(0, 8).toUpperCase()}</span>
+                    </div>
+                    <div className="border-t border-slate-200/60" />
+                    <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Payment</span>
+                        <span className="text-xs font-bold text-slate-900">Cash on Delivery</span>
+                    </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <Link
+                        href={`/profile/orders/${orderId}`}
+                        className="flex-1 h-12 rounded-xl bg-slate-900 text-white text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
+                    >
+                        <Package className="w-4 h-4" /> View Order
+                    </Link>
+                    <Link
+                        href="/"
+                        className="flex-1 h-12 rounded-xl border border-slate-200 text-slate-900 text-xs font-bold uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
+                    >
+                        <Home className="w-4 h-4" /> Back Home
+                    </Link>
                 </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-                <Button asChild className="flex-1 bg-black hover:bg-slate-800 text-white py-6 rounded-xl">
-                    <Link href={`/profile/orders/${orderId}`}>
-                        <Package className="mr-2 h-4 w-4" /> View Order
-                    </Link>
-                </Button>
-                <Button asChild variant="outline" className="flex-1 py-6 rounded-xl border-slate-200">
-                    <Link href="/">
-                        <Home className="mr-2 h-4 w-4" /> Back to Home
-                    </Link>
-                </Button>
-            </div>
-
-            <p className="mt-12 text-sm text-slate-400 italic">
-                Having trouble? <Link href="/contact" className="underline underline-offset-4">Contact Support</Link>
-            </p>
         </div>
     )
 }

@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server"
-import { ProductCard } from "@/components/store/product-card"
-import { Package, X } from "lucide-react"
+import { DenseProductCard } from "@/components/store/dense-product-card"
+import { ShopControls } from "@/components/store/shop-controls"
+import { Package } from "lucide-react"
 import Link from "next/link"
 
 export const metadata = {
@@ -8,87 +9,117 @@ export const metadata = {
     description: "Browse our latest collection of premium products.",
 }
 
-// Next.js 15+ searchParams is an async Promise
+const PRODUCT_SELECT = `
+  *,
+  product_images(url, alt),
+  product_variants(*)
+`
+
 export default async function ShopPage({
     searchParams,
 }: {
-    searchParams: Promise<{ q?: string; search?: string }>
+    searchParams: Promise<{ q?: string; search?: string; sort?: string; category?: string; minPrice?: string; maxPrice?: string }>
 }) {
     const supabase = await createClient()
-
-    // 1. Get the search query from URL
     const params = await searchParams
     const query = params.q || params.search || ""
+    const sort = params.sort || "newest"
+    const categoryId = params.category || ""
+    const minPrice = params.minPrice || ""
+    const maxPrice = params.maxPrice || ""
 
-    // 2. Build the Supabase Query
     let supabaseQuery = supabase
-        .from('products')
-        .select(`
-            *,
-            product_images(url, alt),
-            product_variants(*)
-        `)
-        .eq('status', 'active')
+        .from("products")
+        .select(PRODUCT_SELECT, { count: "exact" })
+        .eq("status", "active")
 
-    // 3. Apply search filter if query exists
     if (query) {
-        // Search in Name OR Brand (case-insensitive)
-        supabaseQuery = supabaseQuery.or(`name.ilike.%${query}%,brand.ilike.%${query}%`)
+        const searchTerm = `%${query}%`
+        supabaseQuery = supabaseQuery.or(
+            `name.ilike.${searchTerm},brand.ilike.${searchTerm}`
+        )
     }
 
-    const { data: products, error } = await supabaseQuery.order('created_at', { ascending: false })
+    if (minPrice) {
+        supabaseQuery = supabaseQuery.gte("price", parseFloat(minPrice))
+    }
+    if (maxPrice) {
+        supabaseQuery = supabaseQuery.lte("price", parseFloat(maxPrice))
+    }
 
-    if (error) console.error("Fetch error:", error)
+    switch (sort) {
+        case "price_asc":
+            supabaseQuery = supabaseQuery.order("price", { ascending: true })
+            break
+        case "price_desc":
+            supabaseQuery = supabaseQuery.order("price", { ascending: false })
+            break
+        case "default":
+            supabaseQuery = supabaseQuery.order("name", { ascending: true })
+            break
+        case "newest":
+        default:
+            supabaseQuery = supabaseQuery.order("created_at", { ascending: false })
+            break
+    }
+
+    const { data: products, count } = await supabaseQuery
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            {/* Hero Section */}
-            <div className="bg-white border-b">
-                <div className="container mx-auto px-4 py-16 text-center">
-                    <span className="font-daciana text-primary tracking-[0.3em] uppercase text-[10px] mb-3 block">
-                        {query ? 'Search Results' : 'Collections'}
+        <div className="min-h-screen bg-white">
+            {/* Hero */}
+            <div className="border-b border-slate-100">
+                <div className="max-w-7xl mx-auto px-4 py-12 md:py-16">
+                    <span className="text-primary tracking-[0.4em] uppercase text-[10px] font-semibold mb-2 block">
+                        {query ? "Search Results" : "Collections"}
                     </span>
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900 mb-4 uppercase">
-                        {query ? `"${query}"` : 'SHOP ALL'}
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900 uppercase">
+                        {query ? `"${query}"` : "Shop All"}
                     </h1>
-
                     {query && (
-                        <Link href="/shop" className="inline-flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 hover:text-red-500 transition-colors uppercase">
-                            <X className="w-3 h-3" /> Clear Search
+                        <Link
+                            href="/shop"
+                            className="inline-flex items-center gap-1.5 mt-3 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors"
+                        >
+                            Clear search
                         </Link>
                     )}
                 </div>
             </div>
 
-            <main className="container mx-auto px-4 py-12">
-                {/* Stats & Filter Bar */}
-                <div className="flex justify-between items-center mb-8">
-                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                        Showing <span className="text-slate-900">{products?.length || 0}</span> products
-                    </p>
-                    <div className="h-[1px] flex-1 bg-slate-200 mx-6 hidden md:block"></div>
-                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
-                        Sort: <span className="text-primary cursor-pointer underline underline-offset-4">Newest</span>
+            <div className="max-w-7xl mx-auto py-8">
+                <div className="flex-1 min-w-0">
+                    {/* Controls bar */}
+                    <div className="px-4">
+                        <ShopControls count={count || 0} />
+                    </div>
+
+                        {/* Products Grid */}
+                        {products && products.length > 0 ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-0">
+                                {products.map((product: any) => (
+                                    <DenseProductCard key={product.id} product={product} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="py-24 text-center">
+                                <Package className="w-10 h-10 text-slate-200 mx-auto mb-4" />
+                                <h3 className="text-base font-black tracking-tight uppercase text-slate-900">
+                                    No products found
+                                </h3>
+                                <p className="text-sm text-slate-400 mt-1">
+                                    Try adjusting your filters or search.
+                                </p>
+                                <Link
+                                    href="/shop"
+                                    className="inline-block mt-6 px-6 py-2.5 bg-slate-900 text-white text-[9px] font-bold tracking-[0.2em] rounded-full uppercase"
+                                >
+                                    Clear all filters
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 </div>
-
-                {products && products.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-                        {products.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="py-32 text-center bg-white rounded-3xl border border-dashed border-slate-200">
-                        <Package className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                        <h3 className="text-lg font-black tracking-tight uppercase">No products found</h3>
-                        <p className="text-slate-400 text-sm mt-2">Try searching for something else or browse categories.</p>
-                        <Link href="/shop" className="inline-block mt-6 px-8 py-3 bg-slate-900 text-white text-[10px] font-bold tracking-widest rounded-full uppercase hover:bg-primary transition-colors">
-                            Back to Shop
-                        </Link>
-                    </div>
-                )}
-            </main>
-        </div>
-    )
-}
+            </div>
+        )
+    }

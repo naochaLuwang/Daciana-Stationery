@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { createClient } from "@/utils/supabase/server"
-import { LogOut, User, Box, Settings } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { User, Search, Heart } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,7 +10,14 @@ import {
 import { redirect } from "next/navigation"
 import { CartButton } from "./cart-button"
 import { NavSearch } from "@/components/nav-search"
-import { MobileMenu } from "../mobile-menu"
+import { HeaderScroll } from "./header-scroll"
+
+const navLinks = [
+    { name: "Home", href: "/" },
+    { name: "Shop", href: "/shop" },
+    { name: "Categories", href: "/categories" },
+    { name: "Brands", href: "/shop" },
+]
 
 export default async function Navbar() {
     const supabase = await createClient()
@@ -24,150 +30,129 @@ export default async function Navbar() {
         redirect("/")
     }
 
-    return (
-        <nav className="sticky top-0 z-50 w-full border-b bg-white/90 backdrop-blur-md">
-            <div className="container mx-auto px-4">
-                {/* Main Desktop & Mobile Row */}
-                <div className="h-20 flex items-center justify-between gap-4">
+    let initialWishlistCount = 0
+    if (user) {
+        const { count } = await supabase
+            .from("wishlist")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", user.id)
+        initialWishlistCount = count || 0
+    }
 
-                    {/* LEFT: Logo Section */}
-                    {/* flex-1 ensures this takes up equal space to the RIGHT section to keep CENTER centered */}
-                    <div className="flex-1 lg:flex-none">
-                        <Link href="/" className="flex flex-col group min-w-fit">
-                            <span className="text-xl md:text-2xl font-black font-daciana tracking-[0.15em] leading-none text-slate-900 group-hover:text-primary transition-colors uppercase">
+    return (
+        <HeaderScroll>
+            <div className="max-w-[1440px] mx-auto px-4 lg:px-8">
+                <div className="h-16 lg:h-24 flex items-center justify-between gap-4 lg:gap-8">
+
+                    {/* Desktop Nav Links (left) */}
+                    <nav className="hidden lg:flex items-center gap-10 flex-1 min-w-0">
+                        {navLinks.map((item) => (
+                            <Link
+                                key={item.name}
+                                href={item.href}
+                                className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 hover:text-slate-900 transition-colors relative group"
+                            >
+                                {item.name}
+                                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[1.5px] bg-slate-900 transition-all duration-300 group-hover:w-full" />
+                            </Link>
+                        ))}
+                    </nav>
+
+                    {/* Logo (center) */}
+                    <div className="flex-shrink-0">
+                        <Link href="/" className="flex flex-col items-center lg:items-center gap-0">
+                            <span className="text-lg lg:text-[28px] font-black font-daciana tracking-[0.12em] leading-none text-slate-900 uppercase">
                                 DACIANA
                             </span>
-                            <span className="text-[7px] md:text-[8px] font-bold tracking-[0.3em] text-slate-400 uppercase whitespace-nowrap mt-1">
-                                Stationery & Cosmetics
+                            <span className="text-[8px] lg:text-[7px] font-bold tracking-[0.35em] text-slate-400 uppercase mt-0.5 lg:mt-1">
+                                STATIONARY & COSMETICS
                             </span>
                         </Link>
                     </div>
 
-                    {/* CENTER: Navigation Links */}
-                    <div className="hidden lg:flex flex-1 items-center justify-center">
-                        <div className="flex items-center gap-10">
-                            {['Home', 'Shop', 'Categories'].map((item) => (
-                                <Link
-                                    key={item}
-                                    href={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
-                                    className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-600 hover:text-primary transition-colors relative group"
-                                >
-                                    {item}
-                                    {/* Animated Underline */}
-                                    <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-primary transition-all duration-300 group-hover:w-full" />
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* RIGHT: Search & Actions */}
-                    <div className="flex items-center gap-3 md:gap-6 justify-end flex-1 lg:flex-none">
-                        {/* Desktop Search - Hidden on mobile/tablet */}
-                        <div className="hidden md:block w-48 xl:w-64">
+                    {/* Actions (right) */}
+                    <div className="flex items-center justify-end gap-2 lg:gap-4 flex-1 min-w-0">
+                        {/* Desktop search */}
+                        <div className="hidden xl:block xl:w-72 mr-1">
                             <NavSearch />
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 lg:gap-2 shrink-0">
+                            {/* Mobile: Search icon */}
+                            <Link
+                                href="/search"
+                                className="lg:hidden p-2 hover:text-slate-900 transition-colors"
+                            >
+                                <Search className="w-5 h-5 text-slate-600" strokeWidth={1.5} />
+                            </Link>
+
+                            {/* Mobile: Wishlist */}
+                            <Link
+                                href="/wishlist"
+                                className="lg:hidden p-2 hover:text-slate-900 transition-colors relative"
+                            >
+                                <Heart className="w-5 h-5 text-slate-600" strokeWidth={1.5} />
+                                {initialWishlistCount > 0 && (
+                                    <span className="absolute -top-0.5 -right-0.5 bg-slate-900 text-white text-[8px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full">
+                                        {initialWishlistCount > 9 ? "9+" : initialWishlistCount}
+                                    </span>
+                                )}
+                            </Link>
+
                             <CartButton />
 
-                            {/* Divider for desktop */}
-                            <div className="h-4 w-[1px] bg-slate-200 mx-2 hidden lg:block" />
+                            {/* Desktop: divider */}
+                            <div className="hidden lg:block h-5 w-px bg-slate-200 mx-1" />
 
-                            {!user ? (
-                                <Link
-                                    href="/login"
-                                    className="hidden sm:block text-[10px] font-bold uppercase tracking-widest hover:text-primary transition-colors px-2"
-                                >
-                                    Login
-                                </Link>
-                            ) : (
-                                <div className="hidden sm:block">
-                                    <div className="hidden sm:block">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 transition-all border border-transparent active:scale-95">
-                                                    <User className="w-5 h-5 text-slate-700" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-56 mt-3 p-2 rounded-2xl shadow-2xl border-slate-100 animate-in fade-in zoom-in-95 duration-200">
-                                                {/* User Header */}
-                                                <div className="px-3 py-3 mb-2 bg-slate-50/50 rounded-xl">
-                                                    <p className="text-[9px] text-slate-400 uppercase font-black tracking-[0.1em]">Account</p>
-                                                    <p className="text-xs font-bold text-slate-900 truncate">{user.email}</p>
-                                                </div>
-
-                                                {/* Menu Items with Icons */}
-                                                <DropdownMenuItem asChild className="rounded-lg py-2.5 focus:bg-slate-50 cursor-pointer">
-                                                    <Link href="/profile" className="flex items-center gap-3 w-full">
-                                                        <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                                                            <User className="w-4 h-4" />
-                                                        </div>
-                                                        <span className="text-xs font-bold text-slate-700">My Profile</span>
-                                                    </Link>
+                            {/* Desktop: User menu */}
+                            <div className="hidden lg:block">
+                                {!user ? (
+                                    <Link
+                                        href="/login"
+                                        className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 hover:text-slate-900 transition-colors px-2"
+                                    >
+                                        Login
+                                    </Link>
+                                ) : (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <button className="focus:outline-none p-2 text-slate-600 hover:text-slate-900 transition-all group">
+                                                <User className="w-[22px] h-[22px] transition-transform group-hover:scale-110" strokeWidth={1.5} />
+                                            </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-56 mt-3 rounded-xl border border-slate-100 shadow-xl p-2 bg-white">
+                                            <div className="px-3 py-2.5 border-b border-slate-50 mb-1">
+                                                <p className="text-[8px] font-bold uppercase tracking-widest text-slate-400">Account</p>
+                                                <p className="text-xs font-semibold text-slate-900 truncate">{user.email}</p>
+                                            </div>
+                                            <DropdownMenuItem asChild className="cursor-pointer rounded-lg focus:bg-slate-50">
+                                                <Link href="/profile" className="text-xs font-semibold py-2.5 px-3">Dashboard</Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem asChild className="cursor-pointer rounded-lg focus:bg-slate-50">
+                                                <Link href="/profile/orders" className="text-xs font-semibold py-2.5 px-3">Orders</Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem asChild className="cursor-pointer rounded-lg focus:bg-slate-50">
+                                                <Link href="/wishlist" className="text-xs font-semibold py-2.5 px-3">Wishlist</Link>
+                                            </DropdownMenuItem>
+                                            {user.email?.includes("admin") && (
+                                                <DropdownMenuItem asChild className="cursor-pointer rounded-lg focus:bg-slate-50">
+                                                    <Link href="/admin" className="text-xs font-semibold py-2.5 px-3">Admin</Link>
                                                 </DropdownMenuItem>
-
-                                                <DropdownMenuItem asChild className="rounded-lg py-2.5 focus:bg-slate-50 cursor-pointer">
-                                                    <Link href="/profile/orders" className="flex items-center gap-3 w-full">
-                                                        <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600">
-                                                            <Box className="w-4 h-4" />
-                                                        </div>
-                                                        <span className="text-xs font-bold text-slate-700">My Orders</span>
-                                                    </Link>
-                                                </DropdownMenuItem>
-
-                                                {/* <DropdownMenuItem asChild className="rounded-lg py-2.5 focus:bg-slate-50 cursor-pointer">
-                                                    <Link href="/wishlist" className="flex items-center gap-3 w-full">
-                                                        <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600">
-                                                            <Heart className="w-4 h-4" />
-                                                        </div>
-                                                        <span className="text-xs font-bold text-slate-700">Wishlist</span>
-                                                    </Link>
-                                                </DropdownMenuItem> */}
-
-                                                {/* Admin Quick Link (Optional check) */}
-                                                {user.email?.includes('admin') && (
-                                                    <DropdownMenuItem asChild className="rounded-lg py-2.5 focus:bg-slate-50 cursor-pointer">
-                                                        <Link href="/admin" className="flex items-center gap-3 w-full">
-                                                            <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white">
-                                                                <Settings className="w-4 h-4" />
-                                                            </div>
-                                                            <span className="text-xs font-bold text-slate-700">Admin Dashboard</span>
-                                                        </Link>
-                                                    </DropdownMenuItem>
-                                                )}
-
-                                                <div className="my-2 border-t border-slate-100" />
-
-                                                {/* Sign Out */}
-                                                <DropdownMenuItem className="p-0 focus:bg-transparent">
-                                                    <form action={signOut} className="w-full px-1">
-                                                        <button className="flex items-center gap-3 w-full p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors group">
-                                                            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                                                                <LogOut className="w-4 h-4" />
-                                                            </div>
-                                                            <span className="text-xs font-black uppercase tracking-widest">Sign Out</span>
-                                                        </button>
-                                                    </form>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Mobile Drawer Trigger (Handles PWA Install & Links) */}
-                            <div className="lg:hidden">
-                                <MobileMenu user={user} />
+                                            )}
+                                            <div className="my-1 border-t border-slate-100" />
+                                            <DropdownMenuItem className="rounded-lg focus:bg-red-50 cursor-pointer">
+                                                <form action={signOut} className="w-full">
+                                                    <button type="submit" className="w-full text-left text-xs font-semibold text-red-600 py-2.5 px-3">Sign Out</button>
+                                                </form>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {/* MOBILE SEARCH BAR (Positioned below the main bar for better UX) */}
-                <div className="md:hidden pb-4">
-                    <NavSearch />
-                </div>
             </div>
-        </nav>
+        </HeaderScroll>
     )
 }

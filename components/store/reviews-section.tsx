@@ -23,7 +23,6 @@ export function ReviewsSection({
         ? (reviews.reduce((acc, rev) => acc + rev.rating, 0) / reviews.length).toFixed(1)
         : 0
 
-    // Calculate rating breakdown percentages
     const getPercentage = (star: number) => {
         if (reviews.length === 0) return 0
         const count = reviews.filter(r => r.rating === star).length
@@ -31,97 +30,95 @@ export function ReviewsSection({
     }
 
     return (
-        <section className="py-24 border-t border-slate-100" id="reviews">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+        <section id="reviews">
+            {/* Header */}
+            <div className="mb-6">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">
+                    REVIEWS
+                </p>
+                <h3 className="text-[26px] font-light text-slate-900 tracking-tight leading-none mt-0.5">
+                    Customer Reviews
+                </h3>
+            </div>
 
-                {/* Summary Column */}
-                <div className="lg:col-span-4 space-y-8">
+            {/* Rating Summary */}
+            {reviews.length > 0 && (
+                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
+                    <span className="text-4xl font-bold text-slate-900">{avgRating}</span>
                     <div>
-                        <span className="font-daciana text-primary tracking-[0.4em] uppercase text-[10px] mb-4 block">
-                            Client Voices
-                        </span>
-                        <h2 className="text-3xl font-black tracking-tighter text-slate-900 uppercase mb-6">
-                            Reviews
-                        </h2>
-
-                        <div className="flex items-end gap-4 mb-6">
-                            <span className="text-6xl font-black text-slate-900 leading-none">{avgRating}</span>
-                            <div className="pb-1">
-                                <div className="flex gap-0.5 mb-1">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className={`w-4 h-4 ${i < Math.round(Number(avgRating)) ? "fill-primary text-primary" : "text-slate-200"}`} />
-                                    ))}
-                                </div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    Based on {reviews.length} reviews
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Rating Progress Bars */}
-                        <div className="space-y-2 max-w-[250px]">
-                            {[5, 4, 3, 2, 1].map((star) => (
-                                <div key={star} className="flex items-center gap-3">
-                                    <span className="text-[10px] font-bold text-slate-400 w-3">{star}</span>
-                                    <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-slate-900 rounded-full"
-                                            style={{ width: `${getPercentage(star)}%` }}
-                                        />
-                                    </div>
-                                </div>
+                        <div className="flex gap-0.5 mb-1">
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <Star
+                                    key={i}
+                                    className={`w-3.5 h-35 ${i <= Math.round(Number(avgRating)) ? "fill-slate-900 text-slate-900" : "text-slate-200"}`}
+                                />
                             ))}
                         </div>
+                        <p className="text-[10px] font-bold text-slate-400">
+                            Based on {reviews.length} review{reviews.length !== 1 ? "s" : ""}
+                        </p>
                     </div>
 
-                    {/* Write Review Button/Form Trigger */}
-                    <div className="pt-4 border-t border-slate-50">
-                        <p className="text-xs text-slate-500 mb-4 italic">Share your thoughts with other clients.</p>
-                        <WriteReviewForm productId={productId} user={user} />
-                    </div>
-                </div>
-
-                {/* Individual Reviews Column */}
-                <div className="lg:col-span-8 space-y-12">
-                    {reviews.length > 0 ? (
-                        reviews.map((review) => (
-                            <div key={review.id} className="border-b border-slate-50 pb-12 last:border-0 animate-in fade-in duration-700">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <div className="flex gap-0.5 mb-2">
-                                            {[...Array(5)].map((_, i) => (
-                                                <Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-slate-900 text-slate-900" : "text-slate-200"}`} />
-                                            ))}
-                                        </div>
-                                        <h4 className="font-bold text-slate-900 uppercase text-sm tracking-tight">{review.title}</h4>
-                                    </div>
-                                    <span className="text-[10px] text-slate-400 font-medium font-mono">
-                                        {mounted ? new Date(review.created_at).toLocaleDateString() : '---'}
-                                    </span>
-                                </div>
-                                <p className="text-slate-600 text-sm leading-relaxed mb-4 italic">
-                                    "{review.comment}"
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">
-                                        {review.user_name}
-                                    </p>
-                                    {review.is_verified && (
-                                        <div className="flex items-center gap-1 text-primary">
-                                            <CheckCircle2 className="w-2.5 h-2.5" />
-                                            <span className="text-[9px] font-bold uppercase tracking-widest">Verified Buyer</span>
-                                        </div>
-                                    )}
+                    {/* Mini breakdown */}
+                    <div className="flex-1 max-w-[120px] space-y-1 ml-auto">
+                        {[5, 4, 3, 2, 1].map((star) => (
+                            <div key={star} className="flex items-center gap-1.5">
+                                <span className="text-[9px] font-bold text-slate-400 w-2">{star}</span>
+                                <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-slate-900 rounded-full"
+                                        style={{ width: `${getPercentage(star)}%` }}
+                                    />
                                 </div>
                             </div>
-                        ))
-                    ) : (
-                        <div className="py-20 bg-slate-50/50 rounded-3xl text-center border border-dashed border-slate-200">
-                            <Star className="w-8 h-8 text-slate-200 mx-auto mb-4" />
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">No reviews yet.</p>
-                        </div>
-                    )}
+                        ))}
+                    </div>
                 </div>
+            )}
+
+            {/* Write Review */}
+            <div className="mb-8">
+                <WriteReviewForm productId={productId} user={user} />
+            </div>
+
+            {/* Reviews List */}
+            <div className="space-y-6">
+                {reviews.length > 0 ? (
+                    reviews.map((review) => (
+                        <div key={review.id} className="border-b border-slate-50 pb-6 last:border-0">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="flex gap-0.5">
+                                    {[1, 2, 3, 4, 5].map((i) => (
+                                        <Star
+                                            key={i}
+                                            className={`w-3 h-3 ${i <= review.rating ? "fill-slate-900 text-slate-900" : "text-slate-200"}`}
+                                        />
+                                    ))}
+                                </div>
+                                {review.is_verified && (
+                                    <span className="flex items-center gap-0.5 text-[9px] font-bold text-emerald-600">
+                                        <CheckCircle2 className="w-2.5 h-2.5" /> Verified
+                                    </span>
+                                )}
+                                <span className="text-[9px] text-slate-400 ml-auto">
+                                    {mounted ? new Date(review.created_at).toLocaleDateString() : ""}
+                                </span>
+                            </div>
+                            {review.title && (
+                                <p className="text-sm font-bold text-slate-900 mb-1">{review.title}</p>
+                            )}
+                            <p className="text-sm text-slate-600 leading-relaxed">
+                                {review.comment}
+                            </p>
+                            <p className="text-[10px] font-bold text-slate-400 mt-2">{review.user_name}</p>
+                        </div>
+                    ))
+                ) : (
+                    <div className="py-12 text-center">
+                        <Star className="w-6 h-6 text-slate-200 mx-auto mb-3" />
+                        <p className="text-xs font-bold text-slate-400">No reviews yet</p>
+                    </div>
+                )}
             </div>
         </section>
     )

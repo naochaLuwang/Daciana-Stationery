@@ -1,88 +1,73 @@
 "use client"
 
-import { useEffect, useRef } from "react" // Added useRef
-import { useCart } from "./use-cart"
+import { useEffect } from "react"
+import { useCart, CartItem } from "./use-cart"
 import { createClient } from "@/utils/supabase/client"
 
-export function CartSync({ userId }: { userId: string | null }) {
-    const { items, setItems, clearCart } = useCart() // Added clearCart
-    const supabase = createClient()
+interface CartSyncProps {
+    userId: string | null
+}
 
-    // Prevent the "Push" logic from running on the very first load
-    // so we don't overwrite the DB with an empty local cart
-    const initialLoadDone = useRef(false)
+export function CartSync({ userId }: CartSyncProps) {
+    const setItems = useCart((s) => s.setItems)
+    const items = useCart((s) => s.items)
 
-    // 1. LOGOUT WATCHER: Clear local store if userId vanishes
+    // Load cart from Supabase when user logs in
     useEffect(() => {
-        if (!userId) {
-            clearCart();
-            initialLoadDone.current = false;
-        }
-    }, [userId, clearCart]);
+        if (!userId) return
 
-    // 2. PULL FROM DB ON LOGIN
-    useEffect(() => {
-        if (!userId) return;
-
-        async function pullCart() {
-            const { data: cart } = await supabase.from('carts').select('id').eq('user_id', userId).single();
-            if (!cart) {
-                initialLoadDone.current = true; // No cart exists yet, but load is "done"
-                return;
-            }
-
-            const { data: dbItems } = await supabase
-                .from('cart_items')
-                .select(`quantity, unit_price, product_id, product_variant_id, products(name, thumbnail_url), product_variants(title, stock)`)
-                .eq('cart_id', cart.id);
-
-            if (dbItems) {
-                const formatted = dbItems.map((ci: any) => ({
-                    id: ci.product_id,
-                    variantId: ci.product_variant_id,
-                    name: ci.products.name,
-                    variantTitle: ci.product_variants.title,
-                    price: Number(ci.unit_price),
-                    mrp: Number(ci.product_variants.price),
-                    image: ci.products.thumbnail_url,
-                    quantity: ci.quantity,
-                    stock: ci.product_variants.stock
-                }));
-                setItems(formatted);
-                // Mark initial load as done so we can start pushing changes to DB
-                initialLoadDone.current = true;
-            }
-        }
-        pullCart();
-    }, [userId, setItems, supabase]);
-
-    // 3. PUSH TO DB ON CHANGE
-    useEffect(() => {
-        // IMPORTANT: Only push if we have a user AND we've finished pulling the initial data
-        if (!userId || !initialLoadDone.current) return;
-
-        const syncToDb = async () => {
-            const { data: cartId } = await supabase.rpc('get_or_create_cart', { p_user_id: userId });
-            if (!cartId) return;
-
-            await supabase.from('cart_items').delete().eq('cart_id', cartId);
-
-            if (items.length > 0) {
-                await supabase.from('cart_items').insert(
-                    items.map(i => ({
-                        cart_id: cartId,
-                        product_id: i.id,
-                        product_variant_id: i.variantId,
-                        quantity: i.quantity,
-                        unit_price: i.price
+        const supabase = createClient()
+        supabase
+            .from("cart_items")
+            .select("product_id, variant_id, name, variant_title, price, mrp, image, quantity, stock")
+            .eq("user_id", userId)
+            .then(({ data }) => {
+                if (data && data.length > 0) {
+                    const remoteItems: CartItem[] = data.map((row: any) => ({
+                        id: row.product_id,
+                        variantId: row.variant_id,
+                        name: row.name,
+                        variantTitle: row.variant_title,
+                        price: row.price,
+                        mrp: row.mrp,
+                        image: row.image,
+                        quantity: row.quantity,
+                        stock: row.stock,
                     }))
-                );
-            }
-        };
+                    setItems(remoteItems)
+                }
+            })
+    }, [userId, setItems])
 
-        const debounce = setTimeout(syncToDb, 1500);
-        return () => clearTimeout(debounce);
-    }, [items, userId]);
+    // Save cart to Supabase whenever items change (if logged in)
+    useEffect(() => {
+        if (!userId) return
 
-    return null;
+        const supabase = createClient()
+        const upsertItems = items.map((item) => ({
+            user_id: userId,
+            product_id: item.id,
+            variant_id: item.variantId,
+            name: item.name,
+            variant_title: item.variantTitle,
+            price: item.price,
+            mrp: item.mrp,
+            image: item.image,
+            quantity: item.quantity,
+            stock: item.stock,
+        }))
+
+        // Clear existing and re-insert
+        supabase
+            .from("cart_items")
+            .delete()
+            .eq("user_id", userId)
+            .then(() => {
+                if (upsertItems.length > 0) {
+                    supabase.from("cart_items").insert(upsertItems)
+                }
+            })
+    }, [userId, items])
+
+    return null
 }

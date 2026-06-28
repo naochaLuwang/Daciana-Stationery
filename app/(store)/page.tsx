@@ -1,94 +1,139 @@
 import { createClient } from "@/utils/supabase/server"
-import { CategoryCard } from "@/components/store/category-card"
-import { ProductCard } from "@/components/store/product-card"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import { HeroCarousel } from "@/components/store/hero-carousel"
+import { ValueProps } from "@/components/store/value-props"
+import { CategoryGrid } from "@/components/store/category-grid"
+import { PromoStrip } from "@/components/store/promo-strip"
+import { BrandBanner } from "@/components/store/brand-banner"
+import { TrendingRow } from "@/components/store/trending-row"
+import { DenseProductCard } from "@/components/store/dense-product-card"
+import { ProductGrid } from "@/components/store/product-grid"
+import { RecentlyViewed } from "@/components/store/recently-viewed"
+
+const PRODUCT_SELECT = `
+  *,
+  product_images(url, alt),
+  product_variants(*)
+`
 
 export default async function HomePage() {
-  const supabase = await createClient()
+    const supabase = await createClient()
 
-  // Fetch categories (already in your code)
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("id, name, slug")
-    .is("parent_id", null)
+    const [
+        bannersRes,
+        categoriesRes,
+        trendingRes,
+        featuredRes,
+        allProductsRes,
+    ] = await Promise.all([
+        supabase
+            .from("banners")
+            .select("*")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true }),
+        supabase
+            .from("categories")
+            .select("id, name, slug, image_url")
+            .is("parent_id", null)
+            .order("name"),
+        supabase
+            .from("products")
+            .select(PRODUCT_SELECT)
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(8),
+        supabase
+            .from("products")
+            .select(PRODUCT_SELECT)
+            .eq("status", "active")
+            .limit(4),
+        supabase
+            .from("products")
+            .select(PRODUCT_SELECT, { count: "exact" })
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .range(0, 7),
+    ])
 
-  // Helper function to find the right ID based on the name
-  const cosmeticCategory = categories?.find(c => c.name.toLowerCase() === 'cosmetics');
-  const stationeryCategory = categories?.find(c => c.name.toLowerCase() === 'stationery');
-  return (
-    <div className="bg-background-light dark:bg-background-dark font-display antialiased">
+    const banners = bannersRes.data || []
+    const categories = categoriesRes.data || []
+    const trending = trendingRes.data || []
+    const featured = featuredRes.data || []
+    const allProducts = allProductsRes.data || []
+    const totalProducts = allProductsRes.count || 0
 
-      {/* 1. DUAL HERO SECTION */}
-      <main className="flex flex-col lg:flex-row h-screen w-full split-container overflow-hidden">
+    const hasTrending = trending.length > 0
+    const hasFeatured = featured.length > 0
 
-        {/* COSMETICS (LEFT) */}
-        <section className="split-panel relative w-full lg:w-1/2 h-1/2 lg:h-full group overflow-hidden bg-cosmetic-pink">
-          <div
-            className="absolute inset-0 z-0 transition-transform duration-700 group-hover:scale-105 bg-cover bg-center"
-            style={{ backgroundImage: `linear-gradient(to right, rgba(253, 242, 248, 0.4), rgba(253, 242, 248, 0.1)), url('/hero-cosmetics.png')` }}
-          />
-          <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-8 lg:px-20">
-            <span className="text-xs font-bold tracking-[0.3em] text-pink-500 uppercase mb-4 block">The Beauty Edit</span>
-            <h2 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter mb-6">COSMETICS</h2>
-            <p className="max-w-md text-gray-700 text-sm mb-8 leading-relaxed">
-              Elevate your daily ritual. Discover our  skincare and beauty essentials.
-            </p>
-            <div className="flex gap-4">
-              <Button asChild className="bg-gray-900 text-white rounded-lg px-10 py-6 uppercase tracking-widest text-xs font-bold hover:bg-primary transition-all">
-                <Link href={`/categories/${cosmeticCategory?.id}`}>Shop Beauty</Link>
-              </Button>
-            </div>
+    return (
+        <>
+            {/* ─── Hero Carousel (full-bleed) ─── */}
+            <HeroCarousel slides={banners.map((b) => ({
+                id: b.id,
+                title: b.title,
+                subtitle: b.subtitle || "",
+                cta: b.cta,
+                href: b.href,
+                bg: b.bg_color,
+                image: b.image_url || undefined,
+                textColor: b.text_color || undefined,
+            }))} />
 
-            {/* HOVER GRID OVERLAY (Cosmetics) */}
-            <div className="absolute bottom-10 left-10 right-10 hidden xl:grid grid-cols-3 gap-4 translate-y-20 group-hover:translate-y-0 transition-all duration-500 opacity-0 group-hover:opacity-100">
-              <HeroQuickCard label="New" title="Lip Glow" img="/products/lip-glow.jpg" color="text-pink-600" />
-              <HeroQuickCard label="Best Seller" title="Hydra Serum" img="/products/serum.jpg" color="text-pink-600" />
-              <HeroQuickCard label="Classic" title="Velvet Tint" img="/products/tint.jpg" color="text-pink-600" />
-            </div>
-          </div>
-        </section>
+            {/* ─── Value Props ─── */}
+            <ValueProps />
 
-        {/* STATIONERY (RIGHT) */}
-        <section className="split-panel relative w-full lg:w-1/2 h-1/2 lg:h-full group overflow-hidden bg-stationery-sage">
-          <div
-            className="absolute inset-0 z-0 transition-transform duration-700 group-hover:scale-105 bg-cover bg-center"
-            style={{ backgroundImage: `linear-gradient(to left, rgba(241, 245, 242, 0.4), rgba(241, 245, 242, 0.1)), url('/hero-stationery.png')` }}
-          />
-          <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-8 lg:px-20">
-            <span className="text-xs font-bold tracking-[0.3em] text-emerald-600 uppercase mb-4 block">The Artisan Collection</span>
-            <h2 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter mb-6">STATIONERY</h2>
-            <p className="max-w-md text-gray-700 text-sm mb-8 leading-relaxed">
-              The art of the written word. Explore our curated selection of stationery.
-            </p>
-            <Button asChild variant="outline" className="border-gray-900/10 rounded-lg px-10 py-6 uppercase tracking-widest text-xs font-bold hover:bg-white/50 transition-all">
-              <Link href={`/categories/${stationeryCategory?.id}`}>Shop Collection</Link>
-            </Button>
+            {/* ─── Shop by Category ─── */}
+            <CategoryGrid categories={categories} />
 
-            {/* HOVER GRID OVERLAY (Stationery) */}
-            <div className="absolute bottom-10 left-10 right-10 hidden xl:grid grid-cols-3 gap-4 translate-y-20 group-hover:translate-y-0 transition-all duration-500 opacity-0 group-hover:opacity-100">
-              <HeroQuickCard label="Limited" title="A5 Journal" img="/products/journal.jpg" color="text-emerald-600" />
-              <HeroQuickCard label="Precision" title="Ink Quill" img="/products/pen.jpg" color="text-emerald-600" />
-              <HeroQuickCard label="Focus" title="2024 Planner" img="/products/planner.jpg" color="text-emerald-600" />
-            </div>
-          </div>
-        </section>
-      </main>
+            {/* ─── Promo Strip (full-bleed) ─── */}
+            <PromoStrip />
 
+            {/* ─── Best Sellers ─── */}
+            {hasTrending && <TrendingRow products={trending} />}
 
-    </div>
-  )
-}
+            {/* ─── Brand Banner (full-bleed) ─── */}
+            <BrandBanner />
 
-// Helper component for the small floating cards
-function HeroQuickCard({ label, title, img, color }: { label: string, title: string, img: string, color: string }) {
-  return (
-    <div className="bg-white/40 backdrop-blur-md rounded-lg p-2 flex items-center gap-3">
-      <div className="size-12 rounded bg-cover bg-center" style={{ backgroundImage: `url('${img}')` }}></div>
-      <div className="text-left">
-        <p className={`text-[10px] font-bold uppercase ${color}`}>{label}</p>
-        <p className="text-xs font-bold text-gray-900">{title}</p>
-      </div>
-    </div>
-  )
+            {/* ─── Top Picks ─── */}
+            {hasFeatured && (
+                <section className="border-t border-slate-50">
+                    <div className="max-w-[1400px] mx-auto px-4 py-8 sm:py-10">
+                        <div className="mb-5">
+                            <span className="text-[9px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+                                CURATED
+                            </span>
+                            <h2 className="text-[22px] sm:text-[28px] font-normal tracking-tight text-slate-900 mt-1">
+                                Top Picks
+                            </h2>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0">
+                            {featured.map((product: any) => (
+                                <DenseProductCard key={product.id} product={product} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* ─── New Arrivals ─── */}
+            <section className="border-t border-slate-50">
+                <div className="max-w-[1400px] mx-auto px-4 py-8 sm:py-10">
+                    <div className="mb-5">
+                        <span className="text-[9px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+                            NEW
+                        </span>
+                        <h2 className="text-[22px] sm:text-[28px] font-normal tracking-tight text-slate-900 mt-1">
+                            New Arrivals
+                        </h2>
+                    </div>
+                    <ProductGrid
+                        initialProducts={allProducts}
+                        initialHasMore={totalProducts > 8}
+                    />
+                </div>
+            </section>
+
+            {/* ─── Recently Viewed ─── */}
+            <RecentlyViewed />
+        </>
+    )
 }

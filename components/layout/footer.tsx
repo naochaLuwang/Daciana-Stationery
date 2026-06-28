@@ -57,10 +57,10 @@ export function Footer() {
                     <div>
                         <h4 className="font-bold uppercase text-xs tracking-widest mb-6 text-slate-400">Shop & Info</h4>
                         <ul className="space-y-4 text-sm font-medium">
-                            <li><Link href="/shop" className="hover:translate-x-1 transition-transform inline-block">All Products</Link></li>
-                            {/* <li><Link href="/about" className="hover:translate-x-1 transition-transform inline-block">Our Story</Link></li>
-                            <li><Link href="/shipping" className="hover:translate-x-1 transition-transform inline-block">Shipping Guide</Link></li> */}
-                            <li><Link href="/contact" className="hover:translate-x-1 transition-transform inline-block">Contact Us</Link></li>
+                            <li><Link href="/shop" className="hover:translate-x-1 transition-transform inline-block hover:text-primary">All Products</Link></li>
+                            <li><Link href="/wishlist" className="hover:translate-x-1 transition-transform inline-block hover:text-primary">My Wishlist</Link></li>
+                            <li><Link href="/track" className="hover:translate-x-1 transition-transform inline-block hover:text-primary">Track Order</Link></li>
+                            <li><Link href="/contact" className="hover:translate-x-1 transition-transform inline-block hover:text-primary">Contact Us</Link></li>
                         </ul>
                     </div>
 

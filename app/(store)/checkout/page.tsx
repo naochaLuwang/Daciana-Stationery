@@ -1,30 +1,35 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 import CheckoutClient from "./checkout-client"
+import { getActivePromos } from "@/app/actions/promo"
 
 export default async function CheckoutPage() {
     const supabase = await createClient()
-
-    // 1. Get the authenticated user
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Redirect to login if no session exists
     if (!user) {
-        redirect("/login?next=/checkout")
+        redirect("/login?redirect=/checkout")
     }
 
-    // 2. Fetch the profile (including address fields)
-    const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single()
+    const [addressRes, promos] = await Promise.all([
+        supabase
+            .from("addresses")
+            .select("*, shipping_methods:shipping_method_id (*)")
+            .eq("user_id", user.id)
+            .order("is_default", { ascending: false }),
+        getActivePromos(),
+    ])
 
-    // 3. Pass profile data to the Client Component
-    // We pass an empty object as fallback if profile is not found
+    const initialAddresses = addressRes.data || []
+    const allPromos = promos || []
+
     return (
         <main className="min-h-screen bg-slate-50/50">
-            <CheckoutClient profile={profile || {}} />
+            <CheckoutClient
+                userId={user.id}
+                initialAddresses={initialAddresses}
+                allPromos={allPromos}
+            />
         </main>
     )
 }

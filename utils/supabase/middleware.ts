@@ -33,23 +33,22 @@ export async function updateSession(request: NextRequest) {
 
     const path = request.nextUrl.pathname;
 
-    // 2. Define Public Routes (Anyone can see these)
-    const isPublicRoute =
-        path === '/' ||
-        path.startsWith('/login') ||
-        path.startsWith('/signup') ||
-        path.startsWith('/auth') ||
-        path.startsWith('/product'); // Assuming product pages are public
+    // 2. Define routes that REQUIRE authentication
+    const isProtectedRoute =
+        path.startsWith('/checkout') ||
+        path.startsWith('/profile') ||
+        path.startsWith('/wishlist');
 
     // 3. Define Admin Routes (Only admins can see these)
     const isAdminRoute = path.startsWith('/admin');
 
     // REDIRECT LOGIC:
 
-    // If no user and trying to access a non-public route (like /profile or /checkout)
-    if (!user && !isPublicRoute) {
+    // If no user and trying to access a protected route, redirect to login
+    if (!user && isProtectedRoute) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
+        url.searchParams.set('redirect', path)
         return NextResponse.redirect(url)
     }
 

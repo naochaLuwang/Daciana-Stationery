@@ -1,6 +1,3 @@
-
-
-
 "use client"
 
 import { create } from 'zustand';
@@ -20,53 +17,91 @@ export interface CartItem {
 
 interface CartStore {
     items: CartItem[];
+    appliedPromo: any | null;
+    shippingPrice: number;
+    baseShippingPrice: number;
+    shippingLabel: string;
+    deliveryTimeLabel: string;
+    selectedShippingId: string | null;
+
+    autoCalculateShipping: () => void;
     addItem: (item: CartItem) => void;
     removeItem: (variantId: string) => void;
     updateQuantity: (variantId: string, quantity: number) => void;
     setItems: (items: CartItem[]) => void;
+    setAppliedPromo: (promo: any) => void;
+    setShippingMethod: (method: { id: string, name: string, price: number, delivery_time_label?: string }) => void;
+    setSelectedShipping: (id: string | null, price: number, label?: string) => void;
     clearCart: () => void;
     totalItems: () => number;
-    shippingMethods: any[];
-    shippingPrice: number;
-    shippingLabel: string; // Added to interface
-    selectedShippingId: string | null;
-    setShippingMethods: (methods: any[]) => void;
-    setSelectedShipping: (id: string | null, price: number, label?: string) => void; // Updated signature
+    getSubtotal: () => number;
+    getDiscountAmount: () => number;
+    getFinalTotal: () => number;
     clearShipping: () => void;
-    getTotalPrice: () => number;
 }
 
 export const useCart = create<CartStore>()(
     persist(
         (set, get) => ({
             items: [],
-            shippingMethods: [],
-            selectedShippingId: null,
+            appliedPromo: null,
             shippingPrice: 0,
-            shippingLabel: '', // Initialized state
+            baseShippingPrice: 0,
+            shippingLabel: '',
+            deliveryTimeLabel: '',
+            selectedShippingId: null,
 
-            setItems: (items) => set({ items }),
+            autoCalculateShipping: () => {
+                const { selectedShippingId, baseShippingPrice } = get()
+                if (!selectedShippingId) return
+                const isFree = get().getSubtotal() >= 3000
+                set({ shippingPrice: isFree ? 0 : baseShippingPrice })
+            },
+
+            getSubtotal: () => {
+                return get().items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+            },
+
+            setShippingMethod: (method) => {
+                const subtotal = get().getSubtotal()
+                const isFree = subtotal >= 3000 && subtotal > 0
+                set({
+                    selectedShippingId: method.id,
+                    shippingLabel: method.name,
+                    baseShippingPrice: method.price,
+                    shippingPrice: isFree ? 0 : method.price,
+                    deliveryTimeLabel: method.delivery_time_label || ''
+                });
+            },
+
+            setSelectedShipping: (id, price, label) => {
+                const subtotal = get().getSubtotal()
+                const isFree = subtotal >= 3000 && subtotal > 0
+                set({
+                    selectedShippingId: id,
+                    baseShippingPrice: price,
+                    shippingPrice: isFree ? 0 : price,
+                    shippingLabel: label || ''
+                });
+            },
 
             addItem: (newItem) => {
                 const currentItems = get().items;
-                const existingItem = currentItems.find(item => item.variantId === newItem.variantId);
+                const existingIndex = currentItems.findIndex(item => item.variantId === newItem.variantId);
+                let updatedItems;
 
-                if (existingItem) {
-                    set({
-                        items: currentItems.map(item =>
-                            item.variantId === newItem.variantId
-                                ? {
-                                    ...item,
-                                    quantity: Math.min(item.quantity + newItem.quantity, item.stock),
-                                    price: newItem.price, // Ensure we use the latest price/mrp
-                                    mrp: newItem.mrp      // Ensure we use the latest price/mrp
-                                }
-                                : item
-                        ),
-                    });
+                if (existingIndex > -1) {
+                    updatedItems = [...currentItems];
+                    updatedItems[existingIndex] = {
+                        ...updatedItems[existingIndex],
+                        quantity: Math.min(updatedItems[existingIndex].quantity + (newItem.quantity || 1), updatedItems[existingIndex].stock)
+                    };
                 } else {
-                    set({ items: [...currentItems, newItem] });
+                    updatedItems = [...currentItems, { ...newItem, quantity: newItem.quantity || 1 }];
                 }
+
+                set({ items: updatedItems });
+                get().autoCalculateShipping();
             },
 
             updateQuantity: (variantId, quantity) => {
@@ -77,55 +112,83 @@ export const useCart = create<CartStore>()(
                             : item
                     )
                 });
+                get().autoCalculateShipping();
             },
 
-            removeItem: (variantId) => set({
-                items: get().items.filter(item => item.variantId !== variantId)
-            }),
-
-            clearCart: () => {
-                set({
-                    items: [],
-                    selectedShippingId: null,
-                    shippingPrice: 0,
-                    shippingLabel: '',
-                    shippingMethods: []
-                });
-
-                useCart.persist.clearStorage();
-
-                if (typeof window !== 'undefined') {
-                    localStorage.removeItem('shopping-cart');
-                }
+            removeItem: (variantId) => {
+                const remainingItems = get().items.filter(item => item.variantId !== variantId);
+                set({ items: remainingItems });
             },
 
-            totalItems: () => get().items.reduce((acc, item) => acc + item.quantity, 0),
+            setItems: (newItems) => {
+                set({ items: newItems });
+            },
 
-            setShippingMethods: (methods) => set({ shippingMethods: methods }),
+            setAppliedPromo: (promo) => set({ appliedPromo: promo }),
 
-            // Updated to handle the label correctly
-            setSelectedShipping: (id: string | null, price: number, label?: string) => set({
-                selectedShippingId: id,
-                shippingPrice: price,
-                shippingLabel: label || '' // Correctly maps to the state
+            clearCart: () => set({
+                items: [],
+                appliedPromo: null,
+                selectedShippingId: null,
+                shippingPrice: 0,
+                baseShippingPrice: 0,
+                shippingLabel: '',
+                deliveryTimeLabel: ''
             }),
 
             clearShipping: () => set({
                 selectedShippingId: null,
                 shippingPrice: 0,
-                shippingLabel: ''
+                baseShippingPrice: 0,
+                shippingLabel: '',
+                deliveryTimeLabel: ''
             }),
 
-            getTotalPrice: () => {
-                const subtotal = get().items.reduce(
-                    (acc, item) => acc + (item.price * item.quantity), 0
-                );
-                return subtotal + get().shippingPrice;
-            }
+            getDiscountAmount: () => {
+                const { items, appliedPromo } = get()
+                if (!appliedPromo) return 0
+
+                const eligibleItems = items.filter((item: any) => {
+                    if (appliedPromo.apply_to === "all") return true
+                    if (appliedPromo.apply_to === "specific_products") {
+                        return appliedPromo.allowedProductIds?.includes(String(item.productId || item.id))
+                    }
+                    return false
+                })
+                if (eligibleItems.length === 0) return 0
+
+                const eligibleSubtotal = eligibleItems.reduce(
+                    (acc: number, item: any) => acc + item.price * item.quantity,
+                    0
+                )
+                if (eligibleSubtotal < (appliedPromo.min_order_amount || 0)) return 0
+
+                let discount = 0
+                if (appliedPromo.discount_type === "percentage") {
+                    discount = (eligibleSubtotal * appliedPromo.discount_value) / 100
+                    if (appliedPromo.max_discount_amount) {
+                        discount = Math.min(discount, appliedPromo.max_discount_amount)
+                    }
+                } else {
+                    discount = appliedPromo.discount_value
+                    discount = Math.min(discount, eligibleSubtotal)
+                }
+                return Math.round(discount)
+            },
+
+            getFinalTotal: () => {
+                const subtotal = get().getSubtotal();
+                const discount = get().getDiscountAmount();
+                const shipping = get().shippingPrice;
+                return Math.max(0, subtotal - discount + shipping);
+            },
+
+            totalItems: () => get().items.reduce((acc, item) => acc + item.quantity, 0),
         }),
         {
             name: 'shopping-cart',
-            storage: createJSONStorage(() => localStorage)
+            storage: createJSONStorage(() => localStorage),
+            version: 2,
         }
     )
 );

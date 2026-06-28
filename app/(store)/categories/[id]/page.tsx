@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server"
-import { ProductCard } from "@/components/store/product-card"
+import { DenseProductCard } from "@/components/store/dense-product-card"
 import { ChevronLeft, ImageOff } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -76,10 +76,10 @@ export default async function CategoryPage({
                 </div>
             </div>
 
-            <main className="container mx-auto px-4 -mt-12 relative z-20 pb-24">
+            <main className="-mt-12 relative z-20 pb-24">
                 {/* SUB-CATEGORY SLIDER */}
                 {category?.sub_categories && category.sub_categories.length > 0 && (
-                    <section className="mb-20">
+                    <section className="mb-20 px-4">
                         <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
                             {category.sub_categories.map((sub: any) => (
                                 <Link key={sub.id} href={`/categories/${sub.id}`} className="flex-shrink-0 group relative w-44 h-44 rounded-[2rem] overflow-hidden border border-slate-100 bg-white shadow-sm transition-all hover:shadow-xl">
@@ -101,7 +101,7 @@ export default async function CategoryPage({
                 )}
 
                 {/* STICKY FILTER BAR */}
-                <div className="sticky top-[72px] z-30 bg-white/90 backdrop-blur-xl py-6 mb-12 border-b flex items-center justify-between">
+                <div className="sticky top-[72px] z-30 bg-white/90 backdrop-blur-xl py-6 px-4 border-b flex items-center justify-between">
                     <div>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                             Collection <span className="text-black ml-1">{products?.length || 0} Pieces</span>
@@ -116,13 +116,13 @@ export default async function CategoryPage({
                 </div>
 
                 {/* PRODUCT GRID */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-16">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-0">
                     {products && products.length > 0 ? (
-                        products.map((product) => (
-                            <ProductCard key={product.id} product={product} />
+                        products.map((product: any) => (
+                            <DenseProductCard key={product.id} product={product} />
                         ))
                     ) : (
-                        <div className="col-span-full py-40 text-center border-2 border-dashed border-slate-100 rounded-[3rem]">
+                        <div className="col-span-full py-40 text-center">
                             <p className="text-slate-400 font-black uppercase tracking-widest text-xs">No pieces found in this selection.</p>
                         </div>
                     )}
